@@ -42,7 +42,7 @@ async function runAudit() {
         // Показываем результат
         document.getElementById('screen-loading').style.display = 'none';
         document.getElementById('screen-result').style.display = 'block';
-        document.getElementById('result-sum').innerText = data.total_lost.toLocaleString();
+        document.getElementById('result-sum').innerText = data.total_sum.toLocaleString();
         document.getElementById('result-details').innerText = data.masked_data;
 
     } catch (e) {
@@ -53,6 +53,7 @@ async function runAudit() {
     }
 
 }
+
 
 
 
