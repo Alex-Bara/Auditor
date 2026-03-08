@@ -1,0 +1,77 @@
+:root {
+    --bg-color: var(--tg-theme-bg-color, #ffffff);
+    --text-color: var(--tg-theme-text-color, #000000);
+    --button-color: var(--tg-theme-button-color, #2481cc);
+    --button-text: var(--tg-theme-button-text-color, #ffffff);
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: sans-serif;
+    padding: 20px;
+}
+
+.mp-option {
+    display: inline-block;
+    margin-right: 15px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+/* Скрываем стандартный радио-баттон, стилизуем рамку при выборе */
+.mp-option input[type="radio"]:checked + span {
+    font-weight: bold;
+    color: var(--button-color);
+}
+
+.main-button {
+    width: 100%;
+    background-color: var(--button-color);
+    color: var(--button-text);
+    border: none;
+    padding: 15px;
+    border-radius: 10px;
+    margin-top: 20px;
+    font-weight: bold;
+}
+.result-card {
+    background: var(--tg-theme-secondary-bg-color);
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 10px;
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+.sum-large {
+    font-size: 32px;
+    font-weight: 800;
+    color: #31b545; /* Зеленый "денежный" цвет */
+    text-align: center;
+    margin: 10px 0;
+}
+
+/* Эффект заблюренного списка */
+.masked-list {
+    filter: blur(4px);
+    pointer-events: none; /* Чтобы нельзя было выделить текст */
+    user-select: none;
+    opacity: 0.6;
+}
+
+.item-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.badge {
+    background: var(--button-color);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+}

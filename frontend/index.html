@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <div id="screen-input">
+            <p>1. Выбери площадку:</p>
+            <div class="marketplace-selector">
+                <label class="mp-option">
+                    <input type="radio" name="marketplace" value="wb" checked>
+                    <span>Wildberries</span>
+                </label>
+                <label class="mp-option">
+                    <input type="radio" name="marketplace" value="ozon">
+                    <span>Ozon</span>
+                </label>
+            </div>
+
+            <p>2. Вставь API-ключ:</p>
+            <input type="text" id="api-key" placeholder="Токен (только чтение)">
+            
+            <button class="main-button" onclick="runAudit()">Запустить сканирование</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
