@@ -46,12 +46,13 @@ async function runAudit() {
         document.getElementById('result-details').innerText = data.masked_data;
 
     } catch (e) {
-        loadingScreen.style.display = 'none';
-        inputScreen.style.display = 'block';
+        document.getElementById("loading-screen").style.display = 'none';
+        document.getElementById("input-screen").style.display = 'block';
         console.error("FULL ERROR:", e); // Смотреть в F12
         alert("Детали ошибки: " + e.name + " - " + e.message);
     }
 
 }
+
 
 
