@@ -2,6 +2,13 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 app = FastAPI()
+
+app.add_middleware(CORSMiddleware, 
+                   allow_origins=["*"],
+                   allow_methods=["*"],
+                   allow_headers=["*"]
+                  )
+
 def mask_id(identifier: str) -> str:
     """Превращает '123456789' в '123***89'"""
     s = str(identifier)
@@ -51,4 +58,5 @@ async def start_audit(request: AuditRequest):
         "total_sum": raw_data["total_lost"],
         "preview": preview_items,
         "count_all": len(raw_data["items"])
+
     }
