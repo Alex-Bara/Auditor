@@ -17,7 +17,7 @@ function renderResults(data) {
                     </div>
                     <div style="font-weight:bold; color: #31b545;">+${item.lost_sum} ₽</div>
                 </div>
-            `;
+                `;
             listContainer.innerHTML += row;
         });
     }
@@ -46,8 +46,12 @@ async function runAudit() {
         document.getElementById('result-details').innerText = data.masked_data;
 
     } catch (e) {
-        alert("Ошибка связи с сервером");
+        loadingScreen.style.display = 'none';
+        inputScreen.style.display = 'block';
+        console.error("FULL ERROR:", e); // Смотреть в F12
+        alert("Детали ошибки: " + e.name + " - " + e.message);
     }
 
 }
+
 
