@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddlware
 from pydantic import BaseModel
 
 app = FastAPI()
@@ -60,5 +61,6 @@ async def start_audit(request: AuditRequest):
         "count_all": len(raw_data["items"])
 
     }
+
 
 
