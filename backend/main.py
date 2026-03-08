@@ -50,7 +50,7 @@ def prepare_preview(raw_data: list):
     ]
 
 # 3. САМ ЭНДПОИНТ (теперь он будет видеть функции выше)
-@app.post("https://auditor-ixog.onrender.com/api/start-audit")
+@app.post("/api/start-audit")
 async def start_audit(request: AuditRequest):
     await asyncio.sleep(2) # Имитация работы
     
@@ -68,3 +68,4 @@ async def start_audit(request: AuditRequest):
         "preview": preview_items,
         "count_all": len(raw_data["items"])
     }
+
