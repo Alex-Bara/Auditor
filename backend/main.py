@@ -7,6 +7,7 @@ app = FastAPI()
 
 app.add_middleware(CORSMiddleware,
                    allow_origins=["*"],
+                   allow_credentials=True,
                    allow_methods=["*"],
                    allow_headers=["*"]
                   )
@@ -62,6 +63,7 @@ async def start_audit(request: AuditRequest):
         "count_all": len(raw_data["items"])
 
     }
+
 
 
 
