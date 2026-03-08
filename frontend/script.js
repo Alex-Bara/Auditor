@@ -3,22 +3,24 @@ tg.expand(); // Разворачиваем на весь экран
 
 function renderResults(data) {
     const listContainer = document.getElementById('result-details');
-    listContainer.innerHTML = ''; // Очистка
+    if (!listContainer) return;
+    listContainer.innerHTML = ''; 
 
-    data.preview.forEach(item => {
-        const row = `
-            <div class="item-row">
-                <div>
-                    <span class="badge">${item.reason}</span><br>
-                    <small>Заказ: ${item.order_id}</small>
+    // Проверяем, что preview существует и это массив
+    if (data.preview && Array.isArray(data.preview)) {
+        data.preview.forEach(item => {
+            const row = `
+                <div class="item-row" style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <div>
+                        <span class="badge" style="background: #2481cc; color: white; padding: 2px 5px; border-radius: 4px; font-size: 10px;">${item.reason}</span><br>
+                        <small>ID: ${item.order_id}</small>
+                    </div>
+                    <div style="font-weight:bold; color: #31b545;">+${item.lost_sum} ₽</div>
                 </div>
-                <div style="font-weight:bold">+${item.lost_sum} ₽</div>
-            </div>
-        `;
-        listContainer.innerHTML += row;
-    });
-
-    document.getElementById('result-sum').innerText = data.total_sum.toLocaleString();
+            `;
+            listContainer.innerHTML += row;
+        });
+    }
 }
 
 async function runAudit() {
@@ -48,3 +50,4 @@ async function runAudit() {
     }
 
 }
+
