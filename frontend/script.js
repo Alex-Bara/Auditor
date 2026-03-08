@@ -15,7 +15,7 @@ function renderResults(data) {
                         <span class="badge" style="background: #2481cc; color: white; padding: 2px 5px; border-radius: 4px; font-size: 10px;">${item.reason}</span><br>
                         <small>ID: ${item.order_id}</small>
                     </div>
-                    <div style="font-weight:bold; color: #31b545;">+${item.lost_sum} ₽</div>
+                    <div style="font-weight:bold; color: #31b545;">+${item.totalt_sum} ₽</div>
                 </div>
                 `;
             listContainer.innerHTML += row;
@@ -50,6 +50,7 @@ async function runAudit() {
     }
 
 }
+
 
 
 
