@@ -30,7 +30,7 @@ async function runAudit() {
     document.getElementById('screen-loading').style.display = 'block';
 
     try {
-        const response = await fetch('/api/start-audit', {
+        const response = await fetch('https://auditor-ixog.onrender.com/api/start-audit', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ api_key: apiKey, marketplace: 'wb' })
@@ -46,4 +46,5 @@ async function runAudit() {
     } catch (e) {
         alert("Ошибка связи с сервером");
     }
+
 }
