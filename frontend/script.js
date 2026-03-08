@@ -46,13 +46,11 @@ async function runAudit() {
         document.getElementById('result-details').innerText = data.masked_data;
 
     } catch (e) {
-        document.getElementById("screen-loading").style.display = 'none';
-        document.getElementById("screen-input").style.display = 'block';
-        console.error("FULL ERROR:", e); // Смотреть в F12
-        alert("Детали ошибки: " + e.name + " - " + e.message);
+        alert("Ошибка связи с сервером! Попробуйте позже.");
     }
 
 }
+
 
 
 
