@@ -14,8 +14,8 @@ def create_claim_pdf(user_data, audit_results):
     # Путь к шрифту (он должен лежать в той же папке на сервере)
     font_path = os.path.join(os.path.dirname(__file__), "Roboto_Condensed-Regular.ttf")
     if os.path.exists(font_path):
-        pdf.add_font('Roboto_Condensed-Regular', '', font_path)
-        pdf.set_font("Roboto_Condensed-Regular", 14)
+        pdf.add_font('Roboto_Condensed-Regular', "", font_path)
+        pdf.set_font("Roboto_Condensed-Regular", size=14)
     else:
         pdf.set_font("Arial", size=12)
         return generate_error_pdf(pdf, "Font file missing! Check backend folder.")
