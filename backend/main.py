@@ -60,12 +60,18 @@ async def start(request: AuditRequest):
 
 @app.get("/api/download-claim")
 async def download(total: int, marketplace: str):
-    # Генерируем "фейковые" данные для теста PDF из параметров
-    mock_results = {"total": total, "items": [{"reason": "Утеря", "amount": total, "id": "TEST"}]}
-    pdf_content = create_claim_pdf({}, mock_results)
+    # Генерируем данные для теста (или берем реальные)
+    mock_results = {
+        "total": total, 
+        "items": [{"reason": "Расхождение", "amount": total, "id": "TEST-123"}]
+    }
     
+    # Вызываем твою функцию из claims.py
+    pdf_content = create_claim_pdf(mock_results)
+    
+    # ВАЖНЫЙ МОМЕНТ: используем bytes(pdf_content)
     return Response(
-        content=pdf_content,
+        content=bytes(pdf_content), 
         media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename=claim_{marketplace}.pdf"}
     )
