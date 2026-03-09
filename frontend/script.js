@@ -1,4 +1,5 @@
 const tg = window.Telegram.WebApp;
+let lastAuditData = { total: 0, marketplace: 'wb' };
 tg.expand(); // Разворачиваем на весь экран
 
 function renderResults(data) {
@@ -38,6 +39,14 @@ async function runAudit() {
             body: JSON.stringify({ api_key: apiKey, marketplace: 'wb' })
         });
         const data = await response.json();
+        // Сохраняем данные для будущего скачивания
+        lastAuditData.total = data.total_sum;
+        lastAuditData.marketplace = document.querySelector('input[name="marketplace"]:checked').value;
+        
+        // Показываем кнопку скачивания
+        document.getElementById('download-btn').style.display = 'block';
+        
+        renderResults(data);
 
         // Показываем результат
         document.getElementById('screen-loading').style.display = 'none';
@@ -50,6 +59,7 @@ async function runAudit() {
     }
 
 }
+
 
 
 
