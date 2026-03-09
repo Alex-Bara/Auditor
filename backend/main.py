@@ -67,7 +67,7 @@ async def download(total: int, marketplace: str):
     }
     
     # Вызываем твою функцию из claims.py
-    pdf_content = create_claim_pdf(mock_results)
+    pdf_content = create_claim_pdf({}, mock_results)
     
     # ВАЖНЫЙ МОМЕНТ: используем bytes(pdf_content)
     return Response(
@@ -75,5 +75,6 @@ async def download(total: int, marketplace: str):
         media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename=claim_{marketplace}.pdf"}
     )
+
 
 
