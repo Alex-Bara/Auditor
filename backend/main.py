@@ -1,5 +1,7 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
+from analyzer import run_audit
+from claims import create_claim_pdf
 from pydantic import BaseModel
 import asyncio
 import random
@@ -49,23 +51,23 @@ def prepare_preview(raw_data: list):
         for item in raw_data[:5]
     ]
 
-# 3. САМ ЭНДПОИНТ (теперь он будет видеть функции выше)
+# 3. САМ ЭНДПОИНТ
 @app.post("/api/start-audit")
-async def start_audit(request: AuditRequest):
-    await asyncio.sleep(2) # Имитация работы
-    
-    if request.api_key == "DEBUG_TEST":
-        raw_data = get_mock_data(request.marketplace)
-    else:
-        # Пока нет интеграции с реальным API, отдаем пустоту
-        raw_data = {"total_lost": 0, "items": []}
+async def start(request: AuditRequest):
+    results = await run_audit(request.marketplace, request.api_key)
+    # Маскируем данные для превью
+    return {"status": "success", "total_sum": results["total"], "preview": results["items"][:5]}
 
-    preview_items = prepare_preview(raw_data["items"])
+@app.get("/api/download-claim")
+async def download(total: int, marketplace: str):
+    # Генерируем "фейковые" данные для теста PDF из параметров
+    mock_results = {"total": total, "items": [{"reason": "Утеря", "amount": total, "id": "TEST"}]}
+    pdf_content = create_claim_pdf({}, mock_results)
     
-    return {
-        "status": "success",
-        "total_sum": raw_data["total_lost"],
-        "preview": preview_items,
-        "count_all": len(raw_data["items"])
-    }
+    return Response(
+        content=pdf_content,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=claim_{marketplace}.pdf"}
+    )
+
 
