@@ -2,6 +2,14 @@ const tg = window.Telegram.WebApp;
 let lastAuditData = { total: 0, marketplace: 'wb' };
 tg.expand(); // Разворачиваем на весь экран
 
+function downloadPDF() {
+    const baseUrl = 'https://auditor-ixog.onrender.com/api/download-claim';
+    const url = `${baseUrl}?total=${lastAuditData.total}&marketplace=${lastAuditData.marketplace}`;
+    
+    // Используем встроенный метод Telegram для открытия ссылок во внешнем браузере
+    Telegram.WebApp.openLink(url);
+}
+
 function renderResults(data) {
     const listContainer = document.getElementById('result-details');
     if (!listContainer) return;
@@ -59,6 +67,7 @@ async function runAudit() {
     }
 
 }
+
 
 
 
