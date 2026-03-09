@@ -6,10 +6,9 @@ def create_claim_pdf(user_data, audit_results):
     
     # ВАЖНО: Нужно подгрузить шрифт с поддержкой кириллицы (например, DejaVuSans)
     # Загрузи файл шрифта .ttf в папку backend
-    # pdf.add_font('DejaVu', '', 'DejaVuSans.ttf', uni=True)
-    # pdf.set_font('DejaVu', '', 14)
+    pdf.add_font('Roboto_Condensed-Regular', '', 'Roboto_Condensed-Regular.ttf', uni=True)
     
-    pdf.set_font("Arial", size=12) # Пока стандартный для структуры
+    pdf.set_font("Roboto_Condensed-Regular.ttf", size=14) # Пока стандартный для структуры
     
     pdf.cell(200, 10, txt="ПРЕТЕНЗИЯ К МАРКЕТПЛЕЙСУ", ln=True, align='C')
     pdf.ln(10)
