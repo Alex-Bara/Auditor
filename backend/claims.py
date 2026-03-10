@@ -45,6 +45,9 @@ def create_claim_pdf(user_data, audit_results):
     pdf.set_font("Roboto_Condensed-Regular", size=10)
     for item in audit_results['items']:
         pdf.cell(0, 8, txt=f"- {item['reason']}: {item['amount']} руб. (ID операции: {item['id']})", ln=True)
+    
+    pdf.multi_cell(0, 7, txt=f"Денежные средства прошу перечислить по следующим реквизитам:\n"
+                         f"Р/с: {seller_info['account']}\nБИК: {seller_info['bik']}")
 
     pdf.ln(15)
     pdf.multi_cell(0, 7, txt="На основании вышеизложенного, требую выплатить указанную сумму в течение 10 (десяти) "
