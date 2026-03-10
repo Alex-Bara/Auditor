@@ -108,11 +108,18 @@ async def start_audit(request: AuditRequest, tg_id: int = Query(...)):
     # Списываем бесплатную попытку только один раз
     if is_first_free:
         supabase.table("users").update({"is_first_audit_free": False}).eq("tg_id", tg_id).execute()
+    # 4. Если блюр активен — подменяем данные (защита от инспектора кода)
+    final_items = results["items"]
+    if is_blurred:
+        final_items = [
+            {"reason": item["reason"], "amount": "✱✱✱", "id": "скрыто"}
+            for item in results["items"]
+        ]
 
     return {
         "status": "success",
         "total_sum": results["total"],
-        "preview": results["items"],
+        "preview": final_items,  # Отдаем либо чистые, либо "испорченные" данные
         "is_blurred": is_blurred
     }
 @app.get("/api/download-claim", response_model=None)
