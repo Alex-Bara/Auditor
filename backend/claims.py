@@ -5,7 +5,7 @@ def generate_error_pdf(pdf, message):
     pdf.cell(200, 10, txt=message, ln=True)
     return pdf.output()
 
-def create_claim_pdf(user_data, audit_results):
+def create_claim_pdf(seller_info, audit_results):
     pdf = FPDF()
     pdf.add_page()
     
