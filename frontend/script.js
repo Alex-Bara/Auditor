@@ -4,11 +4,26 @@ const userId = tg.initDataUnsafe?.user?.id || 12345; // 12345 — для тес�
 tg.expand(); // Разворачиваем на весь экран
 
 function downloadPDF() {
+    const name = document.getElementById('seller-name').value;
+    const inn = document.getElementById('seller-inn').value;
+    const address = document.getElementById('seller-address').value;
+
+    if (!name || !inn) {
+        alert("Пожалуйста, заполните ФИО и ИНН для формирования документа");
+        return;
+    }
+
     const baseUrl = 'https://auditor-ixog.onrender.com/api/download-claim';
-    const url = `${baseUrl}?total=${lastAuditData.total}&marketplace=${lastAuditData.marketplace}`;
+    // Добавляем новые параметры в URL
+    const params = new URLSearchParams({
+        total: lastAuditData.total,
+        marketplace: lastAuditData.marketplace,
+        seller_name: name,
+        seller_inn: inn,
+        seller_address: address
+    });
     
-    // Используем встроенный метод Telegram для открытия ссылок во внешнем браузере
-    Telegram.WebApp.openLink(url);
+    Telegram.WebApp.openLink(`${baseUrl}?${params.toString()}`);
 }
 
 function renderResults(data) {
@@ -71,6 +86,7 @@ async function runAudit() {
     }
 
 }
+
 
 
 
