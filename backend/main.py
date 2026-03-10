@@ -60,46 +60,49 @@ def prepare_preview(raw_data: list):
 
 # 3. ЭНДПОИНТЫ
 @app.post("/api/start-audit")
-async def start_audit(request: AuditRequest, tg_id: int = Query(...)): # Закрыли скобку тут
-    # 1. Проверяем юзера в базе
-    user_query = supabase.table("users").select("*").eq("tg_id", tg_id).execute()
-    
-    if not user_query.data:
-        supabase.table("users").insert({"tg_id": tg_id}).execute()
-        can_audit = True
-    else:
-        can_audit = user_query.data[0]["is_first_audit_free"]
+@app.post("/api/start-audit")
+async def start_audit(request: AuditRequest, tg_id: Query(...)):
+    if tg_id is None:
+        return {"status": "error", "message": "Telegram ID не получен"}
 
-    if not can_audit:
-        return {"status": "error", "message": "Бесплатная попытка использована. Оплатите доступ."}
-
-    # ЗДЕСЬ ВМЕСТО ХАРДКОДА ВЫЗЫВАЕМ НАШ АНАЛИЗАТОР
-    # Передаем ключ с фронта, маркетплейс и статус подписки
     try:
+        user_query = supabase.table("users").select("*").eq("tg_id", tg_id).execute()
+        if not user_query.data:
+            supabase.table("users").insert({"tg_id": tg_id, "is_first_audit_free": True}).execute()
+            is_first_free = True
+        else:
+            is_first_free = user_query.data[0]["is_first_audit_free"]
+    except Exception as e:
+        return {"status": "error", "message": f"Ошибка БД: {str(e)}"}
+
+    # ЗАГЛУШКА ПОДПИСКИ (потом добавим проверку в БД)
+    has_subscription = False
+
+    # ОПРЕДЕЛЯЕМ СТАТУС БЛЮРА
+    # Блюра НЕТ, если это первая бесплатная попытка ИЛИ есть подписка
+    is_blurred = not (is_first_free or has_subscription)
+
+    # Запускаем анализатор
+    try:
+        # Для бесплатной или заблюренной версии даем 2 месяца, для платной - год
         results = run_audit(
-            api_key=request.api_key, 
-            marketplace=request.marketplace, 
-            is_free_tier=True # Пока жестко задаем True, так как подписки еще нет
+            api_key=request.api_key,
+            marketplace=request.marketplace,
+            is_free_tier=not has_subscription
         )
     except Exception as e:
         return {"status": "error", "message": f"Ошибка анализа: {str(e)}"}
 
-    # Списание попытки
-    supabase.table("users").update({"is_first_audit_free": False}).eq("tg_id", tg_id).execute()
-    
+    # Списываем бесплатную попытку только один раз
+    if is_first_free:
+        supabase.table("users").update({"is_first_audit_free": False}).eq("tg_id", tg_id).execute()
+
     return {
-        "status": "success", 
-        "total_sum": results["total"], 
-        "preview": results["items"]
+        "status": "success",
+        "total_sum": results["total"],
+        "preview": results["items"],
+        "is_blurred": is_blurred  # Передаем флаг на фронт
     }
-    # Предположим, results берется из твоего модуля analyzer
-    results = {"total": 14195, "items": [{"reason": "Утеря", "amount": 14195, "id": "WB-99"}]} 
-
-    # 3. Помечаем попытку как использованную
-    supabase.table("users").update({"is_first_audit_free": False}).eq("tg_id", tg_id).execute()
-    
-    return {"status": "success", "total_sum": results["total"], "preview": results["items"]}
-
 @app.get("/api/download-claim")
 async def download(
     total: str = "0", 

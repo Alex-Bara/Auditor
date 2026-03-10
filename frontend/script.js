@@ -31,19 +31,31 @@ function renderResults(data) {
     if (!listContainer) return;
     listContainer.innerHTML = ''; 
 
+    // Если данные нужно скрыть, применяем CSS-блюр к тексту
+    const blurStyle = data.is_blurred ? 'filter: blur(4px); user-select: none;' : '';
+
     if (data.preview && Array.isArray(data.preview)) {
         data.preview.forEach(item => {
             const row = `
                 <div class="item-row" style="display: flex; justify-content: space-between; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 4px;">
-                    <div>
+                    <div style="${blurStyle}">
                         <span class="badge" style="background: #2481cc; color: white; padding: 2px 5px; border-radius: 4px; font-size: 10px;">${item.reason}</span><br>
                         <small>ID: ${item.id}</small>
                     </div>
-                    <div style="font-weight:bold; color: #31b545;">+${item.amount} ₽</div>
+                    <div style="font-weight:bold; color: #31b545; ${blurStyle}">+${item.amount} ₽</div>
                 </div>
             `;
             listContainer.innerHTML += row;
         });
+    }
+    // Добавляем плашку поверх заблюренных данных
+    if (data.is_blurred) {
+        listContainer.innerHTML += `
+            <div style="text-align: center; margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 8px; color: #856404;">
+                <p style="margin: 0 0 10px 0; font-size: 14px;">Детализация скрыта. Оформите подписку, чтобы увидеть все найденные расхождения и скачать претензию.</p>
+                <button onclick="alert('Тут будет вызов оплаты Telegram Stars!')" style="background: #ffaa00; border: none; padding: 8px 15px; color: white; border-radius: 5px; cursor: pointer;">Оформить подписку</button>
+            </div>
+        `;
     }
 }
 
@@ -79,14 +91,17 @@ async function runAudit() {
 
             document.getElementById('screen-loading').style.display = 'none';
             document.getElementById('screen-result').style.display = 'block';
-            
+
             document.getElementById('result-sum').innerText = data.total_sum.toLocaleString();
-            
-            // Выводим список найденных расхождений
+
             renderResults(data);
-            
-            // Показываем кнопку скачивания
-            document.getElementById('download-btn').style.display = 'block';
+
+            // Если данные НЕ заблюрены (первый раз или есть подписка) - показываем скачивание PDF
+            if (!data.is_blurred) {
+                document.getElementById('download-btn').style.display = 'block';
+            } else {
+                document.getElementById('download-btn').style.display = 'none';
+            }
         } else {
             const errorMsg = data.message || JSON.stringify(data.detail) || "Неизвестная ошибка";
             alert("Ошибка: " + errorMsg);
