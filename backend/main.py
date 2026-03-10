@@ -91,7 +91,7 @@ async def start_audit(request: AuditRequest, tg_id: int = Query(...)):
     has_subscription = False
 
     # ОПРЕДЕЛЯЕМ СТАТУС БЛЮРА
-    is_blurred = not (is_first_free or has_subscription)
+    is_blurred = (is_first_free or has_subscription)
     print(is_blurred)
 
     # Запускаем анализатор
@@ -100,7 +100,7 @@ async def start_audit(request: AuditRequest, tg_id: int = Query(...)):
         results = run_audit(
             api_key=request.api_key,
             marketplace=request.marketplace,
-            is_free_tier=not has_subscription
+            is_free_tier=has_subscription
         )
     except Exception as e:
         return {"status": "error", "message": f"Ошибка анализа: {str(e)}"}
