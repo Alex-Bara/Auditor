@@ -91,7 +91,7 @@ async def start_audit(request: AuditRequest, tg_id: int = Query(...)):
     has_subscription = False
 
     # ОПРЕДЕЛЯЕМ СТАТУС БЛЮРА
-    is_blurred = (is_first_free or has_subscription)
+    is_blurred = not (is_first_free or has_subscription)
     print(is_blurred)
 
     # Запускаем анализатор
