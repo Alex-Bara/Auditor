@@ -59,10 +59,10 @@ async function runAudit() {
     document.getElementById('screen-loading').style.display = 'block';
 
     try {
-        const response = await fetch('https://auditor-ixog.onrender.com/api/start-audit', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ api_key: apiKey, marketplace: 'wb' })
+        const response = await fetch(`${BACKEND_URL}/api/start-audit?tg_id=${userId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(auditData)
         });
         const data = await response.json();
         // Сохраняем данные для будущего скачивания
@@ -95,6 +95,7 @@ async function runAudit() {
     }
 
 }
+
 
 
 
