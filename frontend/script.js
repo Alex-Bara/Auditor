@@ -71,11 +71,22 @@ async function runAudit() {
         lastAuditData.total = data.total_sum;
         lastAuditData.marketplace = document.querySelector('input[name="marketplace"]:checked').value;
         
-        // Показываем кнопку скачивания
-        document.getElementById('download-btn').style.display = 'block';
-        
-        renderResults(data);
+        // Внутри функции runAudit после получения ответа:
+        const data = await response.json();
+        console.log("Получены данные:", data); // Для отладки в консоли (F12)
 
+        if (data.status === "success") {
+            // Сохраняем именно то поле, которое прислал бэкенд
+            lastAuditData.total = data.total_sum; 
+            lastAuditData.marketplace = document.querySelector('input[name="marketplace"]:checked').value;
+            
+            // Показываем кнопку скачивания только после успеха
+            document.getElementById('download-btn').style.display = 'block';
+            renderResults(data);
+        } else {
+            alert(data.message);
+        }
+        
         // Показываем результат
         document.getElementById('screen-loading').style.display = 'none';
         document.getElementById('screen-result').style.display = 'block';
@@ -87,6 +98,7 @@ async function runAudit() {
     }
 
 }
+
 
 
 
