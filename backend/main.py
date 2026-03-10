@@ -3,10 +3,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from analyzer import run_audit
 from claims import create_claim_pdf
 from pydantic import BaseModel
+from supabase import create_client, Client
+import os
 import asyncio
 import random
 
 app = FastAPI()
+# Данные берем из переменных окружения Render (Environment Variables)
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # 1. ЧИННИМ CORS (чтобы фронтенд мог достучаться)
 app.add_middleware(
@@ -51,12 +58,30 @@ def prepare_preview(raw_data: list):
         for item in raw_data[:5]
     ]
 
-# 3. САМ ЭНДПОИНТ
+# 3. ЭНДПОИНТЫ
 @app.post("/api/start-audit")
-async def start(request: AuditRequest):
-    results = await run_audit(request.marketplace, request.api_key)
-    # Маскируем данные для превью
-    return {"status": "success", "total_sum": results["total"], "preview": results["items"][:5]}
+async def start_audit(request: AuditRequest, tg_id: int): # tg_id прилетит с фронта
+    # 1. Проверяем, есть ли юзер в базе
+    user_query = supabase.table("users").select("*").eq("tg_id", tg_id).execute()
+    
+    if not user_query.data:
+        # Если нет — регистрируем
+        supabase.table("users").insert({"tg_id": tg_id}).execute()
+        can_audit = True
+    else:
+        # Если есть — смотрим, осталась ли бесплатная попытка
+        can_audit = user_query.data[0]["is_first_audit_free"]
+
+    if not can_audit:
+        return {"status": "error", "message": "Бесплатная попытка использована. Оплатите доступ."}
+
+    # 2. Если всё ок — запускаем анализ (наш старый код)
+    # ... логика анализа ...
+
+    # 3. После успешного аудита помечаем, что попытка потрачена
+    supabase.table("users").update({"is_first_audit_free": False}).eq("tg_id", tg_id).execute()
+    
+    return {"status": "success", "total_sum": results["total"], "preview": results["items"]}
 
 @app.get("/api/download-claim")
 async def download(total: int, marketplace: str):
@@ -75,6 +100,7 @@ async def download(total: int, marketplace: str):
         media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename=claim_{marketplace}.pdf"}
     )
+
 
 
 
