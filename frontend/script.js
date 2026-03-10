@@ -68,9 +68,6 @@ async function runAudit() {
         // Сохраняем данные для будущего скачивания
         lastAuditData.total = data.total_sum;
         lastAuditData.marketplace = document.querySelector('input[name="marketplace"]:checked').value;
-        
-        // Внутри функции runAudit после получения ответа:
-        const data = await response.json();
         console.log("Получены данные:", data); // Для отладки в консоли (F12)
 
         if (data.status === "success") {
@@ -96,6 +93,7 @@ async function runAudit() {
     }
 
 }
+
 
 
 
