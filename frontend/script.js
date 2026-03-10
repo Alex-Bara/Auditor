@@ -1,5 +1,6 @@
 const tg = window.Telegram.WebApp;
 let lastAuditData = { total: 0, marketplace: 'wb' };
+const userId = tg.initDataUnsafe?.user?.id || 12345; // 12345 — для тестов в браузере
 tg.expand(); // Разворачиваем на весь экран
 
 function downloadPDF() {
@@ -34,6 +35,9 @@ function renderResults(data) {
 
 async function runAudit() {
     const apiKey = document.getElementById('api-key').value;
+    const response = await fetch(`${BACKEND_URL}/api/start-audit?tg_id=${userId}`, {
+        method: 'POST'
+    });
     if (!apiKey) return alert("Введите ключ!");
 
     // Переключаем на экран загрузки
@@ -67,6 +71,7 @@ async function runAudit() {
     }
 
 }
+
 
 
 
