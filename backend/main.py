@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Response
+from fastapi import FastAPI, Response, Query, Body
 from fastapi.middleware.cors import CORSMiddleware
 from analyzer import run_audit
 from claims import create_claim_pdf
@@ -60,46 +60,61 @@ def prepare_preview(raw_data: list):
 
 # 3. ЭНДПОИНТЫ
 @app.post("/api/start-audit")
-async def start_audit(request: AuditRequest, tg_id: int = Query(...): # tg_id прилетит с фронта
-    # 1. Проверяем, есть ли юзер в базе
+async def start_audit(request: AuditRequest, tg_id: int = Query(...)): # Закрыли скобку тут
+    # 1. Проверяем юзера в базе
     user_query = supabase.table("users").select("*").eq("tg_id", tg_id).execute()
     
     if not user_query.data:
-        # Если нет — регистрируем
         supabase.table("users").insert({"tg_id": tg_id}).execute()
         can_audit = True
     else:
-        # Если есть — смотрим, осталась ли бесплатная попытка
         can_audit = user_query.data[0]["is_first_audit_free"]
 
     if not can_audit:
         return {"status": "error", "message": "Бесплатная попытка использована. Оплатите доступ."}
 
-    # 2. Если всё ок — запускаем анализ (наш старый код)
-    # ... логика анализа ...
+    # 2. Логика анализа (имитация или реальный вызов)
+    # Предположим, results берется из твоего модуля analyzer
+    results = {"total": 14195, "items": [{"reason": "Утеря", "amount": 14195, "id": "WB-99"}]} 
 
-    # 3. После успешного аудита помечаем, что попытка потрачена
+    # 3. Помечаем попытку как использованную
     supabase.table("users").update({"is_first_audit_free": False}).eq("tg_id", tg_id).execute()
     
     return {"status": "success", "total_sum": results["total"], "preview": results["items"]}
 
 @app.get("/api/download-claim")
-async def download(total: int, marketplace: str, seller_name: str, seller_inn: str, seller_adress: str, account: str, bik: str):
-    # Генерируем данные для теста (или берем реальные)
-    mock_results = {
-        "total": total, 
-        "items": [{"reason": "Расхождение", "amount": total, "id": "TEST-123"}]
+async def download(
+    total: int, 
+    marketplace: str, 
+    seller_name: str, 
+    seller_inn: str, 
+    seller_address: str, # Поправили d
+    account: str, 
+    bik: str
+):
+    # Собираем данные продавца в один словарь
+    seller_info = {
+        "name": seller_name,
+        "inn": seller_inn,
+        "address": seller_address,
+        "account": account,
+        "bik": bik
     }
     
-    # Вызываем твою функцию из claims.py
-    pdf_content = create_claim_pdf({}, mock_results)
+    mock_results = {
+        "total": total, 
+        "items": [{"reason": "Расхождение по отчету", "amount": total, "id": "AUTO-GEN"}]
+    }
     
-    # ВАЖНЫЙ МОМЕНТ: используем bytes(pdf_content)
+    # ПЕРЕДАЕМ реальный словарь с данными, а не пустой {}
+    pdf_content = create_claim_pdf(mock_results, seller_info)
+    
     return Response(
         content=bytes(pdf_content), 
         media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename=claim_{marketplace}.pdf"}
     )
+
 
 
 
