@@ -1,6 +1,7 @@
 const tg = window.Telegram.WebApp;
 let lastAuditData = { total: 0, marketplace: 'wb' };
 const userId = tg.initDataUnsafe?.user?.id || 12345; // 12345 — для тестов в браузере
+const BACKEND_URL = "https://auditor-ixog.onrender.com";
 tg.expand(); // Разворачиваем на весь экран
 
 function downloadPDF() {
@@ -86,6 +87,7 @@ async function runAudit() {
     }
 
 }
+
 
 
 
