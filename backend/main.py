@@ -103,7 +103,7 @@ async def start_audit(request: AuditRequest, tg_id: Query(...)):
         "preview": results["items"],
         "is_blurred": is_blurred  # Передаем флаг на фронт
     }
-@app.get("/api/download-claim")
+@app.get("/api/download-claim", response_model=None)
 async def download(
     total: str = "0", 
     marketplace: str = "wb", 
