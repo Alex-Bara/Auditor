@@ -8,23 +8,21 @@ function downloadPDF() {
     const name = document.getElementById('seller-name').value;
     const inn = document.getElementById('seller-inn').value;
     const address = document.getElementById('seller-address').value;
+    const bik = document.getElementById('seller-bik').value; // Добавь ID в HTML
+    const acc = document.getElementById('seller-account').value; // Добавь ID в HTML
 
-    if (!name || !inn) {
-        alert("Пожалуйста, заполните ФИО и ИНН для формирования документа");
-        return;
-    }
-
-    const baseUrl = 'https://auditor-ixog.onrender.com/api/download-claim';
-    // Добавляем новые параметры в URL
     const params = new URLSearchParams({
-        total: lastAuditData.total,
+        total: lastAuditData.total || 0,
         marketplace: lastAuditData.marketplace,
         seller_name: name,
         seller_inn: inn,
-        seller_address: address
+        seller_address: address,
+        account: acc,
+        bik: bik
     });
     
-    Telegram.WebApp.openLink(`${baseUrl}?${params.toString()}`);
+    const url = `https://auditor-ixog.onrender.com/api/download-claim?${params.toString()}`;
+    Telegram.WebApp.openLink(url);
 }
 
 function renderResults(data) {
@@ -98,6 +96,7 @@ async function runAudit() {
     }
 
 }
+
 
 
 
