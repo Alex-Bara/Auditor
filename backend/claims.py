@@ -20,19 +20,35 @@ def create_claim_pdf(user_data, audit_results):
         pdf.set_font("Arial", size=12)
         return generate_error_pdf(pdf, "Font file missing! Check backend folder.")
     
-    pdf.cell(200, 10, txt="ПРЕТЕНЗИЯ К МАРКЕТПЛЕЙСУ", ln=True, align='C')
+   # 1. Шапка (справа)
+    pdf.set_x(120)
+    pdf.multi_cell(80, 5, txt=f"Кому: ООО «Вайлдберриз»\nОт: {seller_info['name']}\nИНН: {seller_info['inn']}\nАдрес: {seller_info['address']}", align='L')
+    pdf.ln(20)
+    # 2. Заголовок
+    pdf.set_font("Roboto_Condensed-Regular", size=14)
+    pdf.cell(0, 10, txt="ДОСУДЕБНАЯ ПРЕТЕНЗИЯ", ln=True, align='C')
     pdf.ln(10)
-    
-    pdf.cell(200, 10, txt=f"Сумма требований: {audit_results['total']} руб.", ln=True)
+    # 3. Текст
+    pdf.set_font("Roboto_Condensed-Regular", size=11)
+    text = (
+        f"Между мной и ООО «Вайлдберриз» заключен Договор о реализации товара на маркетплейсе. "
+        f"В ходе проведения сверки взаиморасчетов за период проведения аудита были выявлены расхождения "
+        f"на общую сумму {audit_results['total']} руб."
+    )
+    pdf.multi_cell(0, 7, txt=text)
     pdf.ln(5)
     
-    pdf.multi_cell(0, 10, txt="В ходе автоматизированной сверки были выявлены следующие расхождения:")
-    
-    for item in audit_results['items']:
-        pdf.cell(0, 10, txt=f"- {item['reason']}: {item['amount']} руб. (Заказ {item['id']})", ln=True)
-    
+    pdf.multi_cell(0, 7, txt="Основания требований: несоответствие фактически начисленных удержаний "
+                             "данным первичной документации и отчетам о реализации.")
     pdf.ln(10)
-    pdf.multi_cell(0, 10, txt="Требую произвести корректировку взаиморасчетов в течение 10 рабочих дней.")
+    # 4. Таблица или список нарушений
+    pdf.set_font("Roboto_Condensed-Regular", size=10)
+    for item in audit_results['items']:
+        pdf.cell(0, 8, txt=f"- {item['reason']}: {item['amount']} руб. (ID операции: {item['id']})", ln=True)
+
+    pdf.ln(15)
+    pdf.multi_cell(0, 7, txt="На основании вышеизложенного, требую выплатить указанную сумму в течение 10 (десяти) "
+                             "календарных дней. В противном случае я буду вынужден обратиться в Арбитражный суд.")
     
     # Возвращаем байты файла
     return pdf.output()
