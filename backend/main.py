@@ -84,7 +84,7 @@ async def start_audit(request: AuditRequest, tg_id: int): # tg_id прилети
     return {"status": "success", "total_sum": results["total"], "preview": results["items"]}
 
 @app.get("/api/download-claim")
-async def download(total: int, marketplace: str):
+async def download(total: int, marketplace: str, seller_name: str, seller_inn: str, seller_adress: str):
     # Генерируем данные для теста (или берем реальные)
     mock_results = {
         "total": total, 
@@ -100,6 +100,7 @@ async def download(total: int, marketplace: str):
         media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename=claim_{marketplace}.pdf"}
     )
+
 
 
 
