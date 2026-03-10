@@ -60,8 +60,7 @@ def prepare_preview(raw_data: list):
 
 # 3. ЭНДПОИНТЫ
 @app.post("/api/start-audit")
-@app.post("/api/start-audit")
-async def start_audit(request: AuditRequest, tg_id: Query(...)):
+async def start_audit(request: AuditRequest, tg_id: int = Query(...)):
     if tg_id is None:
         return {"status": "error", "message": "Telegram ID не получен"}
 
