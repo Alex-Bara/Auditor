@@ -88,10 +88,11 @@ async def start_audit(request: AuditRequest, tg_id: int = Query(...)):
         return {"status": "error", "message": f"Ошибка БД: {str(e)}"}
 
     # ЗАГЛУШКА ПОДПИСКИ (потом добавим проверку в БД)
-    has_subscription = False
+    has_subscription = True
 
     # ОПРЕДЕЛЯЕМ СТАТУС БЛЮРА
     is_blurred = not (is_first_free or has_subscription)
+    print(is_blurred)
 
     # Запускаем анализатор
     try:
