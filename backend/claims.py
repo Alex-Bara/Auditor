@@ -22,7 +22,7 @@ def create_claim_pdf(seller_info, audit_results):
     
    # 1. Шапка (справа)
     pdf.set_x(120)
-    pdf.multi_cell(80, 5, txt=f"Кому: ООО «Вайлдберриз»\nОт: {seller_info['seller-name']}\nИНН: {seller_info['seller-inn']}\nАдрес: {seller_info['seller-address']}", align='L')
+    pdf.multi_cell(80, 5, txt=f"Кому: ООО «Вайлдберриз»\nОт: {seller_info['name']}\nИНН: {seller_info['inn']}\nАдрес: {seller_info['address']}", align='L')
     pdf.ln(20)
     # 2. Заголовок
     pdf.set_font("Roboto_Condensed-Regular", size=14)
