@@ -84,15 +84,15 @@ async def start_audit(request: AuditRequest, tg_id: int = Query(...)): # Зак�
 
 @app.get("/api/download-claim")
 async def download(
-    total: int, 
-    marketplace: str, 
-    seller_name: str, 
-    seller_inn: str, 
-    seller_address: str, # Поправили d
-    account: str, 
-    bik: str
+    total: str = "0", 
+    marketplace: str = "wb", 
+    seller_name: str = "Не указано", 
+    seller_inn: str = "0", 
+    seller_address: str = "-", 
+    account: str = "-", 
+    bik: str = "-"
 ):
-    # Собираем данные продавца в один словарь
+    # Теперь, если фронт что-то забудет, сервер подставит дефолтное значение и не выдаст 422
     seller_info = {
         "name": seller_name,
         "inn": seller_inn,
@@ -114,6 +114,7 @@ async def download(
         media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename=claim_{marketplace}.pdf"}
     )
+
 
 
 
