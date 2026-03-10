@@ -79,7 +79,9 @@ async function runAudit() {
             document.getElementById('download-btn').style.display = 'block';
             renderResults(data);
         } else {
-            alert(data.message);
+            // Если есть message — выводим его, если нет — выводим весь JSON текстом
+            const errorMsg = data.message || JSON.stringify(data.detail) || "Неизвестная ошибка";
+            alert("Ошибка сервера: " + errorMsg);
         }
         
         // Показываем результат
@@ -93,6 +95,7 @@ async function runAudit() {
     }
 
 }
+
 
 
 
