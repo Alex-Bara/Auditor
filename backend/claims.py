@@ -22,7 +22,7 @@ def create_claim_pdf(seller_info, audit_results):
     
    # 1. Шапка (справа)
     pdf.set_x(120)
-    pdf.multi_cell(80, 5, txt=f"Кому: ООО «Вайлдберриз»\nОт: {seller_info['name']}\nИНН: {seller_info['inn']}\nАдрес: {seller_info['address']}", align='L')
+    pdf.multi_cell(80, 5, txt=f"Кому: ООО «Вайлдберриз»\nОт: {seller_info['seller-name']}\nИНН: {seller_info['seller-inn']}\nАдрес: {seller_info['seller-address']}", align='L')
     pdf.ln(20)
     # 2. Заголовок
     pdf.set_font("Roboto_Condensed-Regular", size=14)
@@ -47,7 +47,7 @@ def create_claim_pdf(seller_info, audit_results):
         pdf.cell(0, 8, txt=f"- {item['reason']}: {item['amount']} руб. (ID операции: {item['id']})", ln=True)
     
     pdf.multi_cell(0, 7, txt=f"Денежные средства прошу перечислить по следующим реквизитам:\n"
-                         f"Р/с: {seller_info['account']}\nБИК: {seller_info['bik']}")
+                         f"Р/с: {seller_info['seller-account']}\nБИК: {seller_info['seller-bik']}")
 
     pdf.ln(15)
     pdf.multi_cell(0, 7, txt="На основании вышеизложенного, требую выплатить указанную сумму в течение 10 (десяти) "
