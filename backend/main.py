@@ -57,8 +57,21 @@ def prepare_preview(raw_data: list):
         {"order_id": mask_id(item["order_id"]), "reason": item["reason"], "lost_sum": item["lost_sum"]}
         for item in raw_data[:5]
     ]
+# 3.Портим данные перед отправкой, если is_blurred = True
+def mask_results(results, should_mask):
+    if not should_mask:
+        return results
 
-# 3. ЭНДПОИНТЫ
+    masked_items = []
+    for item in results["items"]:
+        masked_items.append({
+            "id": "ID_HIDDEN",  # Вместо реального ID
+            "reason": item["reason"],  # Причину можно оставить для интереса
+            "amount": "???"  # Прячем сумму
+        })
+    return {"total": results["total"], "items": masked_items}
+
+# 4. ЭНДПОИНТЫ
 @app.post("/api/start-audit")
 async def start_audit(request: AuditRequest, tg_id: int = Query(...)):
     if tg_id is None:
@@ -78,7 +91,6 @@ async def start_audit(request: AuditRequest, tg_id: int = Query(...)):
     has_subscription = False
 
     # ОПРЕДЕЛЯЕМ СТАТУС БЛЮРА
-    # Блюра НЕТ, если это первая бесплатная попытка ИЛИ есть подписка
     is_blurred = not (is_first_free or has_subscription)
 
     # Запускаем анализатор
@@ -100,7 +112,7 @@ async def start_audit(request: AuditRequest, tg_id: int = Query(...)):
         "status": "success",
         "total_sum": results["total"],
         "preview": results["items"],
-        "is_blurred": is_blurred  # Передаем флаг на фронт
+        "is_blurred": is_blurred
     }
 @app.get("/api/download-claim", response_model=None)
 async def download(
@@ -112,7 +124,7 @@ async def download(
     account: str = "-", 
     bik: str = "-"
 ):
-    # Теперь, если фронт что-то забудет, сервер подставит дефолтное значение и не выдаст 422
+    # Если фронт что-то забудет, сервер подставит дефолтное значение и не выдаст 422
     seller_info = {
         "name": seller_name,
         "inn": seller_inn,
@@ -125,8 +137,6 @@ async def download(
         "total": total, 
         "items": [{"reason": "Расхождение по отчету", "amount": total, "id": "AUTO-GEN"}]
     }
-    
-    # ПЕРЕДАЕМ реальный словарь с данными, а не пустой {}
     pdf_content = create_claim_pdf(mock_results, seller_info)
     
     return Response(
@@ -134,13 +144,3 @@ async def download(
         media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename=claim_{marketplace}.pdf"}
     )
-
-
-
-
-
-
-
-
-
-

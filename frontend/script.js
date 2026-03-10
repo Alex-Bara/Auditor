@@ -28,35 +28,24 @@ function downloadPDF() {
 
 function renderResults(data) {
     const listContainer = document.getElementById('result-details');
-    if (!listContainer) return;
-    listContainer.innerHTML = ''; 
+    listContainer.innerHTML = '';
 
-    // Если данные нужно скрыть, применяем CSS-блюр к тексту
-    const blurStyle = data.is_blurred ? 'filter: blur(4px); user-select: none;' : '';
+    data.preview.forEach(item => {
+        // Если данные заблюрены, добавляем класс.
+        // Но даже если его уберут, там будет текст "ID_HIDDEN"
+        const blurClass = data.is_blurred ? 'masked-list' : '';
 
-    if (data.preview && Array.isArray(data.preview)) {
-        data.preview.forEach(item => {
-            const row = `
-                <div class="item-row" style="display: flex; justify-content: space-between; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 4px;">
-                    <div style="${blurStyle}">
-                        <span class="badge" style="background: #2481cc; color: white; padding: 2px 5px; border-radius: 4px; font-size: 10px;">${item.reason}</span><br>
-                        <small>ID: ${item.id}</small>
-                    </div>
-                    <div style="font-weight:bold; color: #31b545; ${blurStyle}">+${item.amount} ₽</div>
+        const row = `
+            <div class="item-row ${blurClass}">
+                <div>
+                    <span>${item.reason}</span><br>
+                    <small>ID: ${item.id}</small>
                 </div>
-            `;
-            listContainer.innerHTML += row;
-        });
-    }
-    // Добавляем плашку поверх заблюренных данных
-    if (data.is_blurred) {
-        listContainer.innerHTML += `
-            <div style="text-align: center; margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 8px; color: #856404;">
-                <p style="margin: 0 0 10px 0; font-size: 14px;">Детализация скрыта. Оформите подписку, чтобы увидеть все найденные расхождения и скачать претензию.</p>
-                <button onclick="alert('Тут будет вызов оплаты Telegram Stars!')" style="background: #ffaa00; border: none; padding: 8px 15px; color: white; border-radius: 5px; cursor: pointer;">Оформить подписку</button>
+                <div class="amount">+${item.amount} ₽</div>
             </div>
         `;
-    }
+        listContainer.innerHTML += row;
+    });
 }
 
 async function runAudit() {
