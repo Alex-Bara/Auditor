@@ -1,15 +1,16 @@
 const tg = window.Telegram.WebApp;
 let lastAuditData = { total: 0, marketplace: 'wb' };
-const userId = tg.initDataUnsafe?.user?.id || 12345; // 12345 — для тестов в браузере
+const userId = tg.initDataUnsafe?.user?.id || 12345; 
 const BACKEND_URL = "https://auditor-ixog.onrender.com";
-tg.expand(); // Разворачиваем на весь экран
+tg.expand(); 
 
 function downloadPDF() {
+    // Собираем данные из полей
     const name = document.getElementById('seller-name').value;
     const inn = document.getElementById('seller-inn').value;
     const address = document.getElementById('seller-address').value;
-    const bik = document.getElementById('seller-bik').value; // Добавь ID в HTML
-    const acc = document.getElementById('seller-account').value; // Добавь ID в HTML
+    const bik = document.getElementById('seller-bik')?.value || ""; 
+    const acc = document.getElementById('seller-account')?.value || ""; 
 
     const params = new URLSearchParams({
         total: lastAuditData.total || 0,
@@ -21,7 +22,7 @@ function downloadPDF() {
         bik: bik
     });
     
-    const url = `https://auditor-ixog.onrender.com/api/download-claim?${params.toString()}`;
+    const url = `${BACKEND_URL}/api/download-claim?${params.toString()}`;
     Telegram.WebApp.openLink(url);
 }
 
@@ -30,18 +31,17 @@ function renderResults(data) {
     if (!listContainer) return;
     listContainer.innerHTML = ''; 
 
-    // Проверяем, что preview существует и это массив
     if (data.preview && Array.isArray(data.preview)) {
         data.preview.forEach(item => {
             const row = `
-                <div class="item-row" style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <div class="item-row" style="display: flex; justify-content: space-between; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 4px;">
                     <div>
                         <span class="badge" style="background: #2481cc; color: white; padding: 2px 5px; border-radius: 4px; font-size: 10px;">${item.reason}</span><br>
-                        <small>ID: ${item.order_id}</small>
+                        <small>ID: ${item.id || item.order_id}</small>
                     </div>
-                    <div style="font-weight:bold; color: #31b545;">+${item.totalt_sum} ₽</div>
+                    <div style="font-weight:bold; color: #31b545;">+${item.amount} ₽</div>
                 </div>
-                `;
+            `;
             listContainer.innerHTML += row;
         });
     }
@@ -49,66 +49,56 @@ function renderResults(data) {
 
 async function runAudit() {
     const apiKey = document.getElementById('api-key').value;
-    const response = await fetch(`${BACKEND_URL}/api/start-audit?tg_id=${userId}`, {
-        method: 'POST'
-    });
     if (!apiKey) return alert("Введите ключ!");
 
-    // Переключаем на экран загрузки
+    const marketplace = document.querySelector('input[name="marketplace"]:checked').value;
+
+    // Собираем объект данных для отправки
+    const auditData = {
+        api_key: apiKey,
+        marketplace: marketplace
+    };
+
+    // Переключаем экраны
     document.getElementById('screen-input').style.display = 'none';
     document.getElementById('screen-loading').style.display = 'block';
 
     try {
         const response = await fetch(`${BACKEND_URL}/api/start-audit?tg_id=${userId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(auditData)
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(auditData) // Теперь auditData определен
         });
+
         const data = await response.json();
-        // Сохраняем данные для будущего скачивания
-        lastAuditData.total = data.total_sum;
-        lastAuditData.marketplace = document.querySelector('input[name="marketplace"]:checked').value;
-        console.log("Получены данные:", data); // Для отладки в консоли (F12)
+        console.log("Ответ сервера:", data);
 
         if (data.status === "success") {
-            // Сохраняем именно то поле, которое прислал бэкенд
-            lastAuditData.total = data.total_sum; 
-            lastAuditData.marketplace = document.querySelector('input[name="marketplace"]:checked').value;
+            lastAuditData.total = data.total_sum;
+            lastAuditData.marketplace = marketplace;
+
+            document.getElementById('screen-loading').style.display = 'none';
+            document.getElementById('screen-result').style.display = 'block';
             
-            // Показываем кнопку скачивания только после успеха
-            document.getElementById('download-btn').style.display = 'block';
+            document.getElementById('result-sum').innerText = data.total_sum.toLocaleString();
+            
+            // Выводим список найденных расхождений
             renderResults(data);
+            
+            // Показываем кнопку скачивания
+            document.getElementById('download-btn').style.display = 'block';
         } else {
-            // Если есть message — выводим его, если нет — выводим весь JSON текстом
             const errorMsg = data.message || JSON.stringify(data.detail) || "Неизвестная ошибка";
-            alert("Ошибка сервера: " + errorMsg);
+            alert("Ошибка: " + errorMsg);
+            // Возвращаем на главный экран при ошибке
+            document.getElementById('screen-loading').style.display = 'none';
+            document.getElementById('screen-input').style.display = 'block';
         }
-        
-        // Показываем результат
-        document.getElementById('screen-loading').style.display = 'none';
-        document.getElementById('screen-result').style.display = 'block';
-        document.getElementById('result-sum').innerText = data.total_sum.toLocaleString();
-        document.getElementById('result-details').innerText = data.masked_data;
 
     } catch (e) {
-        alert("Ошибка связи с сервером! Попробуйте позже.");
+        console.error(e);
+        alert("Ошибка связи с сервером!");
+        document.getElementById('screen-loading').style.display = 'none';
+        document.getElementById('screen-input').style.display = 'block';
     }
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
