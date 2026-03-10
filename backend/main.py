@@ -60,7 +60,7 @@ def prepare_preview(raw_data: list):
 
 # 3. ЭНДПОИНТЫ
 @app.post("/api/start-audit")
-async def start_audit(request: AuditRequest, tg_id: int): # tg_id прилетит с фронта
+async def start_audit(request: AuditRequest, tg_id: int = Query(...): # tg_id прилетит с фронта
     # 1. Проверяем, есть ли юзер в базе
     user_query = supabase.table("users").select("*").eq("tg_id", tg_id).execute()
     
@@ -100,6 +100,7 @@ async def download(total: int, marketplace: str, seller_name: str, seller_inn: s
         media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename=claim_{marketplace}.pdf"}
     )
+
 
 
 
