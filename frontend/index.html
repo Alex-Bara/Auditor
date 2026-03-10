@@ -34,6 +34,12 @@
             <button id="download-btn" class="secondary-button" style="display:none;" onclick="downloadPDF()">
                 📥 Скачать претензию (PDF)
             </button>
+            <div id="requisites-form" style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
+                <h4>Данные для претензии:</h4>
+                <input type="text" id="seller-name" placeholder="ФИО ИП или Название ООО" class="main-input">
+                <input type="text" id="seller-inn" placeholder="ИНН" class="main-input">
+                <input type="text" id="seller-address" placeholder="Юридический адрес" class="main-input">
+            </div>
     
             <button class="main-button" onclick="payAndUnlock()">Разблокировать полный отчет</button>
         </div>
@@ -41,5 +47,6 @@
     <script src="script.js"></script>
 </body>
 </html>
+
 
 
