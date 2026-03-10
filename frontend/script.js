@@ -37,7 +37,7 @@ function renderResults(data) {
                 <div class="item-row" style="display: flex; justify-content: space-between; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 4px;">
                     <div>
                         <span class="badge" style="background: #2481cc; color: white; padding: 2px 5px; border-radius: 4px; font-size: 10px;">${item.reason}</span><br>
-                        <small>ID: ${item.id || item.order_id}</small>
+                        <small>ID: ${item.id}</small>
                     </div>
                     <div style="font-weight:bold; color: #31b545;">+${item.amount} ₽</div>
                 </div>
@@ -102,3 +102,4 @@ async function runAudit() {
         document.getElementById('screen-input').style.display = 'block';
     }
 }
+
