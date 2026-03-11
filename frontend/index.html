@@ -4,6 +4,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="data:,">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 </head>
 <body>
     <div id="app">
@@ -11,22 +12,28 @@
             <p>1. Выбери площадку:</p>
             <div class="marketplace-selector">
                 <label class="mp-option">
-                    <input type="radio" name="marketplace" value="wb" checked>
-                    <span>Wildberries</span>
+                    <div class="input-grop">
+                        <input type="radio" name="marketplace" value="wb" checked>
+                        <span>Wildberries</span>
+                    </div>
                 </label>
                 <label class="mp-option">
-                    <input type="radio" name="marketplace" value="ozon">
-                    <span>Ozon</span>
+                    <div class="input-grop">
+                        <input type="radio" name="marketplace" value="ozon">
+                        <span>Ozon</span>
+                    </div>
                 </label>
             </div>
 
             <p>2. Вставь API-ключ:</p>
-            <input type="text" id="api-key" placeholder="Токен (только чтение)">
-            
+            <div class="input-grop">
+                <input type="text" id="api-key" placeholder="Токен (только чтение)">
+            </div>
             <button class="main-button" onclick="runAudit()">Запустить сканирование</button>
         </div>
-        <div id="screen-loading" style="display: none;">
-            <div class="loader"></div>
+        <div id="screen-loading" style="display: none; text-align: center; padding-top: 50px;">
+            <div class="spinner"></div>
+            <p>Анализируем отчеты за 60 дней...</p>
         </div>
         <div id="screen-result" style="display:none;">
             <h2>Маркетплейс должен Вам: <span id="result-sum">0</span> ₽</h2>
@@ -37,11 +44,13 @@
             </button>
             <div id="requisites-form" style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
                 <h4>Данные для претензии:</h4>
-                <input type="text" id="seller-name" placeholder="ФИО ИП или Название ООО" class="main-input">
-                <input type="text" id="seller-inn" placeholder="ИНН" class="main-input">
-                <input type="text" id="seller-address" placeholder="Юридический адрес" class="main-input">
-                <input type="text" id="seller-bik" placeholder="БИК банка" class="main-input">
-                <input type="text" id="seller-account" placeholder="Номер счета (20 знаков)" class="main-input">
+                <div class="input-grop">
+                    <input type="text" id="seller-name" placeholder="ФИО ИП или Название ООО" class="main-input">
+                    <input type="text" id="seller-inn" placeholder="ИНН" class="main-input">
+                    <input type="text" id="seller-address" placeholder="Юридический адрес" class="main-input">
+                    <input type="text" id="seller-bik" placeholder="БИК банка" class="main-input">
+                    <input type="text" id="seller-account" placeholder="Номер счета (20 знаков)" class="main-input">
+                </div>
             </div>
     
             <button class="main-button" onclick="payAndUnlock()">Разблокировать полный отчет</button>
