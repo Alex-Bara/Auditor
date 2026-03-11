@@ -1,6 +1,6 @@
 const tg = window.Telegram.WebApp;
 let lastAuditData = { total: 0, marketplace: 'wb' };
-const userId = tg.initDataUnsafe?.user?.id || 12345; 
+
 const BACKEND_URL = "https://auditor-ixog.onrender.com";
 tg.expand(); 
 
