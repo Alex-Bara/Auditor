@@ -4,6 +4,14 @@ const userId = tg.initDataUnsafe?.user?.id || 12345;
 const BACKEND_URL = "https://auditor-ixog.onrender.com";
 tg.expand(); 
 
+let userId;
+if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+    userId = tg.initDataUnsafe.user.id;
+} else {
+    // Если мы в обычном браузере (тестируем локально)
+    userId = 123456789;
+    console.warn("Telegram WebApp не обнаружен. Используем тестовый ID.");
+}
 function showInputScreen() {
     document.getElementById('screen-loading').style.display = 'none';
     document.getElementById('screen-result').style.display = 'none'; // Скрываем результаты
@@ -12,21 +20,31 @@ function showInputScreen() {
 
 // Вызываем при старте приложения
 async function loadUserData() {
-    const tg_id = window.Telegram.WebApp.initDataUnsafe.user.id;
-    const response = await fetch(`/api/get-profile?tg_id=${tg_id}`);
-    const data = await response.json();
+    try {
+        // Используем переменную userId, которую определили выше
+        const response = await fetch(`${BACKEND_URL}/api/get-profile?tg_id=${userId}`);
+        const data = await response.json();
 
-    if (data.status === "success" && data.profile) {
-        const p = data.profile;
-        // Заполняем поля формы (если они есть в DOM)
-        if(document.getElementById('seller-name')) document.getElementById('seller-name').value = p.seller_name || '';
-        if(document.getElementById('seller-inn')) document.getElementById('seller-inn').value = p.inn || '';
-        if(document.getElementById('seller-address')) document.getElementById('seller-address').value = p.address || '';
-        if(document.getElementById('seller-bik')) document.getElementById('seller-bik').value = p.bik || '';
-        if(document.getElementById('seller-account')) document.getElementById('seller-account').value = p.account || '';
+        if (data.status === "success" && data.profile) {
+            const p = data.profile;
+            const fields = {
+                'seller-name': p.seller_name,
+                'seller-inn': p.inn,
+                'seller-address': p.address,
+                'seller-bik': p.bik,
+                'seller-account': p.account
+            };
+
+            // Заполняем поля только если они существуют в DOM
+            for (const [id, value] of Object.entries(fields)) {
+                const el = document.getElementById(id);
+                if (el) el.value = value || '';
+            }
+        }
+    } catch (e) {
+        console.error("Ошибка загрузки данных профиля:", e);
     }
 }
-
 // Функция сохранения
 async function saveProfile() {
     const profile = {
