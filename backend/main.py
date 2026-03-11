@@ -89,60 +89,66 @@ async def start_audit(request: AuditRequest, tg_id: int = Query(...)):
     if not user_query.data:
         # Новый пользователь
         supabase.table("users").insert(
-            {"tg_id": tg_id, "is_first_audit_free": True, "has_subscription": False}).execute()
+            {"tg_id": tg_id, "is_first_audit_free": True, "has_subscription": False}
+        ).execute()
         is_first_free = True
         has_subscription = False
+        user_data = {}
     else:
         # Существующий пользователь
-        is_first_free = user_query.data[0]["is_first_audit_free"]
-        has_subscription = user_query.data[0].get("has_subscription", False)
+        user_data = user_query.data[0]
+        is_first_free = user_data.get("is_first_audit_free", False)
+        has_subscription = user_data.get("has_subscription", False)
 
     # 2. РЕШАЕМ: Делаем работу или нет?
-    # Работаем, если это первый раз ИЛИ если куплена подписка
     can_see_details = is_first_free or has_subscription
-    user_data = user_query.data[0] if user_query.data else {}
+
     try:
         if can_see_details:
-        # ВЫПОЛНЯЕМ РЕАЛЬНЫЙ АНАЛИЗ
-        results = await run_audit(
-            api_key=request.api_key,
-            marketplace=request.marketplace,
-            is_free_tier=not has_subscription,
-            client_id=request.client_id
-        )
-        is_blurred = False
-        if results.get("error") == "invalid_key":
-            return {"status": "error", "message": "Неверный API-ключ. Проверьте его в кабинете селлера."}
+            # ВЫПОЛНЯЕМ РЕАЛЬНЫЙ АНАЛИЗ
+            results = await run_audit(
+                api_key=request.api_key,
+                marketplace=request.marketplace,
+                is_free_tier=not has_subscription,
+                client_id=request.client_id
+            )
 
-        # --- МАГИЯ АВТОЗАПОЛНЕНИЯ (теперь здесь!) ---
-        # Если в базе еще нет имени селлера, пробуем его зафиксировать
-        if results.get("total", 0) >= 0 and not user_data.get("seller_name"):
-            # Формируем техническое имя, чтобы юзер видел, что данные подтянулись
-            new_name = f"Селлер {request.marketplace.upper()}"
-            supabase.table("users").update({"seller_name": new_name}).eq("tg_id", tg_id).execute()
+            # Если в результатах пришла ошибка ключа (обработанная в analyzer.py)
+            if isinstance(results, dict) and results.get("error") == "invalid_key":
+                return {"status": "error", "message": "Неверный API-ключ. Проверьте его в кабинете селлера."}
 
-        # Списываем бесплатную попытку
-        if is_first_free:
-            supabase.table("users").update({"is_first_audit_free": False}).eq("tg_id", tg_id).execute()
+            is_blurred = False
+
+            # --- МАГИЯ АВТОЗАПОЛНЕНИЯ ---
+            if not user_data.get("seller_name"):
+                new_name = f"Селлер {request.marketplace.upper()}"
+                supabase.table("users").update({"seller_name": new_name}).eq("tg_id", tg_id).execute()
+
+            # Списываем бесплатную попытку
+            if is_first_free:
+                supabase.table("users").update({"is_first_audit_free": False}).eq("tg_id", tg_id).execute()
+
         else:
-        # ОТКАЗ В ДОСТУПЕ: Заблюренные данные
-        results = {
-            "total": 42000,
-            "items": [
-                {"reason": "Аномальная логистика", "amount": "✱✱✱", "id": "скрыто"},
-                {"reason": "Ошибка в отчете реализации", "amount": "✱✱✱", "id": "скрыто"}
-            ]
-        }
-    except Exception as e:
-        return {"status": "error", "message": f"Ошибка сервера: {str(e)}"}
-        is_blurred = True
-    return {
-        "status": "success",
-        "total_sum": results["total"],
-        "preview": results["items"],
-        "is_blurred": is_blurred
-    }
+            # ОТКАЗ В ДОСТУПЕ: Заблюренные данные (заглушка)
+            results = {
+                "total": 42000,
+                "items": [
+                    {"reason": "Аномальная логистика", "amount": "✱✱✱", "id": "скрыто"},
+                    {"reason": "Ошибка в отчете реализации", "amount": "✱✱✱", "id": "скрыто"}
+                ]
+            }
+            is_blurred = True
 
+        return {
+            "status": "success",
+            "total_sum": results["total"],
+            "preview": results["items"],
+            "is_blurred": is_blurred
+        }
+
+    except Exception as e:
+        print(f"Audit Error: {e}")  # Логируем для себя
+        return {"status": "error", "message": f"Ошибка сервера: {str(e)}"}
 @app.get("/api/download-claim", response_model=None)
 async def download(
     total: str = "0", 
