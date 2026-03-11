@@ -7,6 +7,12 @@ import asyncio
 # 1. WILDBERRIES: РАБОТА С API СТАТИСТИКИ
 # ==========================================
 async def fetch_wb_reportDetailByPeriod(api_key: str, date_from: str, date_to: str) -> list:
+    if api_key == "DEBUG_TOKEN":
+        # Возвращаем те самые данные, которые были у нас раньше в муляже
+        return [
+            {"rrid": "123", "supplier_oper_name": "Логистика", "delivery_rub": 1500, "sa_name": "Тест Товар"},
+            {"rrid": "124", "supplier_oper_name": "Штраф", "penalty": 5000, "sa_name": "Брак"}
+        ]
     url = "https://statistics-api.wildberries.ru/api/v1/supplier/reportDetailByPeriod"
     headers = {"Authorization": api_key}
     params = {"dateFrom": date_from, "dateTo": date_to}
