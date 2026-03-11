@@ -153,6 +153,12 @@ function renderResults(data) {
     });
 }
 
+function showSubscriptionOffers() {
+    // Скрываем форму ввода, показываем блок с кнопками оплаты
+    document.getElementById('screen-input').style.display = 'none';
+    document.getElementById('screen-subscription').style.display = 'block';
+}
+
 async function runAudit() {
     const apiKey = document.getElementById('api-key').value;
     const marketplace = document.querySelector('input[name="marketplace"]:checked').value;
@@ -181,44 +187,26 @@ async function runAudit() {
             body: JSON.stringify(auditData)
         });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || "Ошибка сервера");
-        }
-
         const data = await response.json();
         stopLoadingAnimation();
 
-        if (data.status === "success") {
-            lastAuditData.total = data.total_sum;
-            lastAuditData.marketplace = marketplace;
-
+        if (data.status === "payment_required") {
+            // Прячем всё лишнее и показываем экран оплаты
             document.getElementById('screen-loading').style.display = 'none';
-            document.getElementById('screen-result').style.display = 'block';
-            document.getElementById('result-sum').innerText = data.total_sum.toLocaleString();
+            showSubscriptionOffers(); // Функция, которая выводит тарифы
+            return;
+        }
 
-            renderResults(data);
-            await loadUserData();
-
-            const unlockContainer = document.getElementById('unlock-container');
-            const downloadBtn = document.getElementById('download-btn');
-
-            if (data.is_blurred) {
-                unlockContainer.style.display = 'block';
-                downloadBtn.style.display = 'none';
-                document.getElementById('found-sum-hint').innerText = data.total_sum.toLocaleString();
-            } else {
-                unlockContainer.style.display = 'none';
-                downloadBtn.style.display = 'block';
-            }
+        if (data.status === "success") {
+            // Показываем результат (он теперь всегда разблокирован, раз мы сюда дошли)
+            showResultScreen(data);
         } else {
-            tg.showAlert(data.message || "Ошибка при сканировании");
+            tg.showAlert(data.message);
             showInputScreen();
         }
     } catch (e) {
         stopLoadingAnimation();
-        console.error(e);
-        tg.showAlert("Ошибка: " + e.message);
+        tg.showAlert("Ошибка связи");
         showInputScreen();
     }
 }
