@@ -85,11 +85,18 @@ async function runAudit() {
 
             renderResults(data);
 
+            const unlockContainer = document.getElementById('unlock-container');
+            const downloadBtn = document.getElementById('download-btn');
+
             // Если данные НЕ заблюрены (первый раз или есть подписка) - показываем скачивание PDF
-            if (!data.is_blurred) {
-                document.getElementById('download-btn').style.display = 'block';
+            if (data.is_blurred) {
+                // ПОКАЗЫВАЕМ кнопку оплаты, ПРЯЧЕМ кнопку скачивания
+                unlockContainer.style.display = 'block';
+                downloadBtn.style.display = 'none';
+                document.getElementById('found-sum-hint').innerText = data.total_sum.toLocaleString();
             } else {
-                document.getElementById('download-btn').style.display = 'none';
+                document.getElementById('download-btn').style.display = 'block';
+                unlockContainer.style.display = 'none';
             }
         } else {
             const errorMsg = data.message || JSON.stringify(data.detail) || "Неизвестная ошибка";

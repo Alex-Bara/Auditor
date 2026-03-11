@@ -46,7 +46,15 @@
                 </div>
             </div>
     
-            <button class="main-button" onclick="payAndUnlock()">Разблокировать полный отчет</button>
+            <div id="unlock-container" style="display: none; text-align: center; margin-top: 20px;">
+                <p style="font-size: 13px; color: var(--tg-hint); margin-bottom: 10px;">
+                     Найдено расхождений на сумму <span id="found-sum-hint" style="font-weight: bold; color: var(--tg-text);">0</span> ₽.
+                     Чтобы увидеть детали и скачать претензию, разблокируйте полный отчет.
+                </p>
+                <button class="btn-primary" onclick="payAndUnlock()" style="background: var(--success);">
+                    Разблокировать за ⭐️ 50
+                </button>
+            </div>
         </div>
     </div>
     <script src="script.js"></script>
