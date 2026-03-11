@@ -16,23 +16,30 @@
 
                 <input type="radio" id="ozon" name="marketplace" value="ozon">
                 <label for="ozon">Ozon</label>
+                <div id="ozon-fields" style="display:none;">
+                </div>
             </div>
 
             <p>2. Вставь API-ключ:</p>
             <div class="input-group">
                 <label for="api-key" id="api-key-label">API-ключ (Статистика)</label>
                 <input type="text" id="api-key" placeholder="Вставьте токен...">
+                <small class="hint">Мы используем его только для чтения отчетов.
+                    <a href="#" onclick="showHelp('api')">Где найти ключ?</a>
+                </small>
             </div>
 
-            <div class="input-group" id="client-id-group" style="display: none;">
-                <label for="client-id">Client-ID (только для Ozon)</label>
-                <input type="text" id="client-id" placeholder="Например: 123456">
+            <div class="input-group">
+                <label>Client-ID</label>
+                <input type="text" id="client-id" placeholder="Ваш client-id...">
+                <small class="hint">Указан в разделе API вашего кабинета Ozon.</small>
             </div>
             <button class="main-button" onclick="runAudit()">Запустить сканирование</button>
         </div>
         <div id="screen-loading" style="display: none; text-align: center; padding-top: 50px;">
             <div class="spinner"></div>
-            <p>Анализируем отчеты...</p>
+            <div class="loader"></div>
+            <p id="loading-text">Инициализация...</p>
         </div>
         <div id="screen-result" style="display:none;">
             <h2>Маркетплейс должен Вам: <span id="result-sum" style="color: #31b545">0</span> ₽</h2>

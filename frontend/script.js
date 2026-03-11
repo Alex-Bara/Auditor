@@ -1,27 +1,61 @@
 const tg = window.Telegram.WebApp;
 let lastAuditData = { total: 0, marketplace: 'wb' };
+let loadingInterval;
 
 const BACKEND_URL = "https://auditor-ixog.onrender.com";
 tg.expand(); 
+
+function startLoadingAnimation(marketplace) {
+    const loadingText = document.getElementById('loading-text');
+    const steps = [
+        "Проверка ключей доступа...",
+        "Подключение к API " + (marketplace === 'wb' ? 'Wildberries' : 'Ozon') + "...",
+        "Загрузка финансовых отчетов за 60 дней...",
+        "Анализ тарифов логистики...",
+        "Поиск необоснованных штрафов...",
+        "Сверка возвратов и отмен...",
+        "Формирование итогового отчета..."
+    ];
+
+    let currentStep = 0;
+    loadingText.innerText = steps[0];
+
+    loadingInterval = setInterval(() => {
+        currentStep++;
+        if (currentStep < steps.length) {
+            loadingText.innerText = steps[currentStep];
+        }
+    }, 2000); // Меняем текст каждые 2 секунды
+}
+
+function stopLoadingAnimation() {
+    if (loadingInterval) clearInterval(loadingInterval);
+}
 
 let userId;
 if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
     userId = tg.initDataUnsafe.user.id;
 } else {
-    // Если мы в обычном браузере (тестируем локально)
     userId = 123456789;
     console.warn("Telegram WebApp не обнаружен. Используем тестовый ID.");
 }
+
+function showHelp(type) {
+    let message = "";
+    if (type === 'api') {
+        message = "1. Зайдите в Личный кабинет селлера.\n2. Перейдите в Настройки -> API.\n3. Создайте новый ключ с типом 'Статистика'.\n\nЭто безопасно: мы не имеем доступа к вашим заказам или изменению цен.";
+    }
+    tg.showAlert(message);
+}
+
 function showInputScreen() {
     document.getElementById('screen-loading').style.display = 'none';
     document.getElementById('screen-result').style.display = 'none'; // Скрываем результаты
     document.getElementById('screen-input').style.display = 'block'; // Показываем ввод
 }
 
-// Вызываем при старте приложения
 async function loadUserData() {
     try {
-        // Используем переменную userId, которую определили выше
         const response = await fetch(`${BACKEND_URL}/api/get-profile?tg_id=${userId}`);
         const data = await response.json();
 
@@ -45,7 +79,7 @@ async function loadUserData() {
         console.error("Ошибка загрузки данных профиля:", e);
     }
 }
-// Функция сохранения
+
 async function saveProfile() {
     const profile = {
         seller_name: document.getElementById('seller-name').value,
@@ -69,7 +103,6 @@ async function saveProfile() {
     }
 }
 
-// Слушатель переключателей маркетплейсов
 document.querySelectorAll('input[name="marketplace"]').forEach(radio => {
     radio.addEventListener('change', function() {
         const clientIdGroup = document.getElementById('client-id-group');
@@ -77,12 +110,10 @@ document.querySelectorAll('input[name="marketplace"]').forEach(radio => {
         const apiKeyInput = document.getElementById('api-key');
 
         if (this.value === 'ozon') {
-            // Показываем Client ID, меняем подсказки для Ozon
             clientIdGroup.style.display = 'block';
             apiKeyLabel.innerText = 'API-ключ (Ozon)';
             apiKeyInput.placeholder = 'Вставьте API-ключ Ozon...';
         } else {
-            // Прячем Client ID, возвращаем подсказки для WB
             clientIdGroup.style.display = 'none';
             apiKeyLabel.innerText = 'API-ключ (Статистика WB)';
             apiKeyInput.placeholder = 'Вставьте токен WB...';
@@ -91,7 +122,6 @@ document.querySelectorAll('input[name="marketplace"]').forEach(radio => {
 });
 
 function downloadPDF() {
-    // Собираем данные из полей
     const name = document.getElementById('seller-name').value;
     const inn = document.getElementById('seller-inn').value;
     const address = document.getElementById('seller-address').value;
@@ -117,8 +147,6 @@ function renderResults(data) {
     listContainer.innerHTML = '';
 
     data.preview.forEach(item => {
-        // Если данные заблюрены, добавляем класс.
-        // Но даже если его уберут, там будет текст "ID_HIDDEN"
         const blurClass = data.is_blurred ? 'masked-list' : '';
 
         const row = `
@@ -137,22 +165,23 @@ function renderResults(data) {
 async function runAudit() {
     const apiKey = document.getElementById('api-key').value;
     const marketplace = document.querySelector('input[name="marketplace"]:checked').value;
-    const clientId = document.getElementById('client-id').value; // Берем Client ID
+    const clientId = document.getElementById('client-id').value;
 
-    if (!apiKey) return alert("Введите ключ!");
-    // Валидация: если выбран Ozon, Client ID обязателен
-    if (marketplace === 'ozon' && !clientId) return alert("Введите Client-ID для Ozon!");
+    if (!apiKey) return tg.showAlert("Введите API-ключ!");
+    if (marketplace === 'ozon' && !clientId) return tg.showAlert("Введите Client-ID для Ozon!");
 
-    // Собираем объект данных для отправки
     const auditData = {
         api_key: apiKey,
         marketplace: marketplace,
-        client_id: marketplace === 'ozon' ? clientId : null // Добавили поле
+        client_id: marketplace === 'ozon' ? clientId : null
     };
 
     // Переключаем экраны
     document.getElementById('screen-input').style.display = 'none';
     document.getElementById('screen-loading').style.display = 'block';
+
+    // Запускаем анимацию шагов
+    startLoadingAnimation(marketplace);
 
     try {
         const response = await fetch(`${BACKEND_URL}/api/start-audit?tg_id=${userId}`, {
@@ -161,33 +190,25 @@ async function runAudit() {
             body: JSON.stringify(auditData)
         });
 
-        // Проверяем, что сервер вообще ответил (статус 200-299)
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.message || "Ошибка сервера");
         }
 
         const data = await response.json();
+        stopLoadingAnimation();
 
         if (data.status === "success") {
-            // 1. Сохраняем данные для PDF
             lastAuditData.total = data.total_sum;
             lastAuditData.marketplace = marketplace;
 
-            // 2. Убираем лоадер и показываем результат
             document.getElementById('screen-loading').style.display = 'none';
             document.getElementById('screen-result').style.display = 'block';
-
-            // 3. Обновляем цифры на экране
             document.getElementById('result-sum').innerText = data.total_sum.toLocaleString();
 
-            // 4. Отрисовываем таблицу (включая блюр, если нужно)
             renderResults(data);
-
-            // 5. ПОДТЯГИВАЕМ СОХРАНЕННЫЕ РЕКВИЗИТЫ
             await loadUserData();
 
-            // 6. Логика кнопок (Разблокировать vs Скачать)
             const unlockContainer = document.getElementById('unlock-container');
             const downloadBtn = document.getElementById('download-btn');
 
@@ -200,15 +221,13 @@ async function runAudit() {
                 downloadBtn.style.display = 'block';
             }
         } else {
-            // Сервер вернул status: "error" (например, неверный API ключ)
-            alert(data.message || "Ошибка при сканировании");
-            showInputScreen(); // Возвращаем форму ввода
+            tg.showAlert(data.message || "Ошибка при сканировании");
+            showInputScreen();
         }
     } catch (e) {
+        stopLoadingAnimation();
         console.error(e);
-        alert("Ошибка связи с сервером!");
-        document.getElementById('screen-loading').style.display = 'none';
-        document.getElementById('screen-input').style.display = 'block';
+        tg.showAlert("Ошибка: " + e.message);
+        showInputScreen();
     }
 }
-
