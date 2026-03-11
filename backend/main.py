@@ -1,22 +1,23 @@
 from datetime import datetime
 
-from fastapi import FastAPI, Response, Query, Body
+from fastapi import FastAPI, Response, Query, Body, Request
 from fastapi.middleware.cors import CORSMiddleware
 from analyzer import run_audit
 from claims import create_claim_pdf
 from pydantic import BaseModel
 from supabase import create_client, Client
 from typing import Optional
+from datetime import datetime, timedelta
 import os
 import asyncio
 import random
 import httpx
 
-BOT_TOKEN = "8636041832:AAE8z7AQQc1gxiWfX-iwRwC27GBZDqTpj1Y"
 app = FastAPI()
 # Данные берем из переменных окружения Render (Environment Variables)
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+BOT_TOKEN = "8636041832:AAE8z7AQQc1gxiWfX-iwRwC27GBZDqTpj1Y"
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
@@ -135,22 +136,49 @@ async def start_audit(request: AuditRequest, tg_id: int = Query(...)):
         return {"status": "error", "message": f"Ошибка анализа: {str(e)}"}
 
 
-@app.get("/api/test-stars")
-async def test_stars(tg_id: int = Query(...)):
-    """Эндпоинт для проверки: создает инвойс на 1 Звезду"""
+# 1. ЭНДПОИНТ СОЗДАНИЯ СЧЕТА (Для фронтенда)
+@app.get("/api/create-stars-invoice")
+async def create_invoice(tg_id: int = Query(...), amount: int = 500):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/createInvoiceLink"
 
     payload = {
-        "title": "Тестовая покупка",
-        "description": "Проверка работы Telegram Stars",
-        "payload": f"test_{tg_id}",
-        "currency": "XTR",  # ЭТО КЛЮЧЕВОЙ МОМЕНТ
-        "prices": [{"label": "1 Звезда", "amount": 1}]
+        "title": "Безлимитный Аудит (30 дней)",
+        "description": "Доступ к анализу WB/Ozon и выгрузке PDF-претензий",
+        "payload": f"sub_{tg_id}",  # Это "метка", которую мы получим при оплате
+        "currency": "XTR",
+        "prices": [{"label": "Подписка на месяц", "amount": amount}]
     }
 
     async with httpx.AsyncClient() as client:
         r = await client.post(url, json=payload)
-        return r.json()
+        res = r.json()
+        if res.get("ok"):
+            return {"link": res["result"]}
+        return {"status": "error", "message": res.get("description")}
+
+# ВЕБХУК: ЛОВИМ ПОДТВЕРЖДЕНИЕ ОПЛАТЫ
+@app.post("/webhook/telegram")
+async def telegram_webhook(request: Request):
+    data = await request.json()
+
+    # Telegram присылает успешную оплату в объекте message -> successful_payment
+    if "message" in data and "successful_payment" in data["message"]:
+        pay_info = data["message"]["successful_payment"]
+        payload = pay_info.get("invoice_payload", "")  # Наша метка "sub_12345"
+
+        if payload.startswith("sub_"):
+            user_id = int(payload.split("_")[1])
+
+            # Обновляем статус в Supabase
+            supabase.table("users").update({
+                "has_subscription": True,
+                "is_first_audit_free": False,
+                "subscription_until": (datetime.now() + timedelta(days=30)).isoformat()
+            }).eq("tg_id", user_id).execute()
+
+            print(f"!!! ОПЛАТА УСПЕШНА: Доступ открыт !!!")
+
+    return {"ok": True}
 
 @app.get("/api/create-stars-invoice")
 async def create_invoice(tg_id: int, amount: int):

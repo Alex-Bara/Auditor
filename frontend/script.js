@@ -72,6 +72,29 @@ async function pay(method, amount) {
     }
 }
 
+async function buySubscription(starsAmount) {
+    try {
+        // 1. Запрашиваем ссылку у нашего бэкенда
+        const response = await fetch(`${BACKEND_URL}/api/create-stars-invoice?tg_id=${userId}&amount=${starsAmount}`);
+        const data = await response.json();
+
+        if (data.link) {
+            // 2. Открываем нативное окно оплаты
+            tg.openInvoice(data.link, (status) => {
+                if (status === 'paid') {
+                    tg.showAlert("Оплата принята!");
+                    // Перезагружаем или переключаем экран
+                    window.location.reload();
+                } else if (status === 'cancelled') {
+                    tg.showConfirm("Оплата отменена.");
+                }
+            });
+        }
+    } catch (e) {
+        tg.showAlert("Ошибка при создании счета. Попробуйте позже.");
+    }
+}
+
 function showInputScreen() {
     document.getElementById('screen-loading').style.display = 'none';
     document.getElementById('screen-result').style.display = 'none'; // Скрываем результаты
