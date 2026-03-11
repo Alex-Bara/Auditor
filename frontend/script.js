@@ -86,7 +86,7 @@ async function runAudit() {
             renderResults(data);
 
             // Если данные НЕ заблюрены (первый раз или есть подписка) - показываем скачивание PDF
-            if (data.is_blurred) {
+            if (!data.is_blurred) {
                 document.getElementById('download-btn').style.display = 'block';
             } else {
                 document.getElementById('download-btn').style.display = 'none';
