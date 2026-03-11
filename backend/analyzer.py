@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-# 1. МУЛЯЖ ОТВЕТА API WILDBERRIES
+# МУЛЯЖ ОТВЕТА API WILDBERRIES
 # Структура данных на 100% повторяет реальный JSON от API статистики
 def fetch_wb_reportDetailByPeriod(api_key: str, date_from: str, date_to: str) -> list:
     """
@@ -30,7 +30,7 @@ def fetch_wb_reportDetailByPeriod(api_key: str, date_from: str, date_to: str) ->
         }
     ]
 
-# 2. АНАЛИЗАТОР (Бизнес-логика)
+# АНАЛИЗАТОР WB (Бизнес-логика)
 def process_wb_data(raw_data: list) -> dict:
     discrepancies = []
     total_found = 0
@@ -62,24 +62,103 @@ def process_wb_data(raw_data: list) -> dict:
         "items": discrepancies
     }
 
-# 3. ГЛАВНАЯ ФУНКЦИЯ ДЛЯ MAIN.PY
-def run_audit(api_key: str, marketplace: str, is_free_tier: bool) -> dict:
-    if marketplace != "wb":
-        return {"total": 0, "items": [{"id": "0", "reason": "Парсер для Ozon в разработке", "amount": 0}]}
 
-    # Формируем период в зависимости от подписки
+# ==========================================
+# МУЛЯЖ ОТВЕТА API OZON
+# ==========================================
+def fetch_ozon_transactions(api_key: str, date_from: str, date_to: str) -> list:
+    """
+    В реальности эндпоинт: https://api-seller.ozon.ru/v3/finance/transaction/list
+    Требует заголовки: {"Client-Id": client_id, "Api-Key": api_key}
+    """
+    print(f"[API MOCK] Запрос к OZON. Период: {date_from} - {date_to}")
+
+    return [
+        {
+            "operation_id": "11223344-1", "operation_type": "Delivery",
+            "delivery_charge": 2500, "amount": -2500, "items": [{"name": "Товар X", "sku": 778899}]
+        },  # Аномально дорогая логистика
+        {
+            "operation_id": "11223344-2", "operation_type": "ReturnAndCancellation",
+            "delivery_charge": 0, "amount": 0, "items": [{"name": "Товар Y", "sku": 778890}]
+        },  # Отмена, статус завис (потеряшка)
+        {
+            "operation_id": "11223344-3", "operation_type": "ItemDefectPenalty",
+            "delivery_charge": 0, "amount": -8000, "items": [{"name": "Товар Z", "sku": 778891}]
+        },  # Штраф за брак (спорный)
+        {
+            "operation_id": "11223344-4", "operation_type": "Delivery",
+            "delivery_charge": 75, "amount": -75, "items": [{"name": "Товар X", "sku": 778899}]
+        }  # Нормальная логистика
+    ]
+
+
+# ==========================================
+# АНАЛИЗАТОР OZON (Бизнес-логика)
+# ==========================================
+def process_ozon_data(raw_data: list) -> dict:
+    discrepancies = []
+    total_found = 0
+
+    for item in raw_data:
+        item_name = item.get("items", [{}])[0].get("name", "Неизвестный товар")
+
+        # Логика 1: Аномально дорогая логистика (сбой расчета объемного веса)
+        if item.get("operation_type") == "Delivery" and item.get("delivery_charge", 0) > 1000:
+            amount = item["delivery_charge"]
+            total_found += amount
+            discrepancies.append({
+                "id": item["operation_id"],
+                "reason": f"Завышенная логистика ({item_name})",
+                "amount": amount
+            })
+
+        # Логика 2: Штрафы за брак/повреждения (часто вина логистики Ozon)
+        if item.get("operation_type") in ["ItemDefectPenalty", "Penalty"]:
+            amount = abs(item.get("amount", 0))
+            if amount > 0:
+                total_found += amount
+                discrepancies.append({
+                    "id": item["operation_id"],
+                    "reason": f"Спорный штраф ({item_name})",
+                    "amount": amount
+                })
+
+        # Логика 3: Потеряшки при отмене
+        if item.get("operation_type") == "ReturnAndCancellation" and item.get("amount") == 0:
+            amount = 3500  # Примерная оценочная стоимость утерянного товара
+            total_found += amount
+            discrepancies.append({
+                "id": item["operation_id"],
+                "reason": f"Утеряно при отмене ({item_name})",
+                "amount": amount
+            })
+
+    return {
+        "total": total_found,
+        "items": discrepancies
+    }
+
+# ГЛАВНАЯ ФУНКЦИЯ ДЛЯ MAIN.PY
+def run_audit(api_key: str, marketplace: str, is_free_tier: bool) -> dict:
+    # Определяем период
     end_date = datetime.now()
     if is_free_tier:
-        start_date = end_date - timedelta(days=60) # 2 месяца назад
+        start_date = end_date - timedelta(days=60)
     else:
-        start_date = end_date - timedelta(days=365) # 1 год назад (или кастомно)
+        start_date = end_date - timedelta(days=365)
 
-    # WB требует формат YYYY-MM-DD
     str_start = start_date.strftime("%Y-%m-%d")
     str_end = end_date.strftime("%Y-%m-%d")
 
-    # Получаем сырые данные
-    raw_data = fetch_wb_reportDetailByPeriod(api_key, str_start, str_end)
-    
-    # Анализируем и возвращаем
-    return process_wb_data(raw_data)
+    # Маршрутизатор маркетплейсов
+    if marketplace == "wb":
+        raw_data = fetch_wb_reportDetailByPeriod(api_key, str_start, str_end)
+        return process_wb_data(raw_data)
+
+    elif marketplace == "ozon":
+        raw_data = fetch_ozon_transactions(api_key, str_start, str_end)
+        return process_ozon_data(raw_data)
+
+    else:
+        raise ValueError("Неизвестный маркетплейс")
