@@ -32,10 +32,10 @@
         </div>
         <div id="screen-loading" style="display: none; text-align: center; padding-top: 50px;">
             <div class="spinner"></div>
-            <p>Анализируем отчеты за 60 дней...</p>
+            <p>Анализируем отчеты...</p>
         </div>
         <div id="screen-result" style="display:none;">
-            <h2>Маркетплейс должен Вам: <span id="result-sum">0</span> ₽</h2>
+            <h2>Маркетплейс должен Вам: <span id="result-sum" style="color: #31b545">0</span> ₽</h2>
             <div id="result-details" class="" style="color: black"></div>
     
             <button id="download-btn" class="secondary-button" style="display:none;" onclick="downloadPDF()">
@@ -44,7 +44,7 @@
             <div id="requisites-form" style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
                 <h4>Данные для претензии:</h4>
                 <div class="input-grop">
-                    <input type="text" id="seller-name" placeholder="ФИО ИП или Название ООО" class="main-input">
+                    <input type="text" id="seller-name" placeholder="ФИО, ИП или Название ООО" class="main-input">
                 </div>
                 <div class="input-grop">
                     <input type="text" id="seller-inn" placeholder="ИНН" class="main-input">

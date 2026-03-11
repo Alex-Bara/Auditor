@@ -129,11 +129,15 @@ input:focus {
     font-weight: 600;
     transition: all 0.2s ease;
     margin: 0;
-    color: var(--tg-text);
+    color: #000000;
 }
 
 .marketplace-selector input[type="radio"]:checked + label {
     background: #fff;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     color: var(--tg-link);
+}
+
+.main-input{
+    margin-bottom: 20px;
 }
