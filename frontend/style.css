@@ -107,3 +107,33 @@ input:focus {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+.marketplace-selector {
+    display: flex;
+    background: #f0f0f0;
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 20px;
+}
+
+.marketplace-selector input[type="radio"] {
+    display: none;
+}
+
+.marketplace-selector label {
+    flex: 1;
+    text-align: center;
+    padding: 10px;
+    cursor: pointer;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    margin: 0;
+    color: var(--tg-text);
+}
+
+.marketplace-selector input[type="radio"]:checked + label {
+    background: #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    color: var(--tg-link);
+}

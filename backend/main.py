@@ -74,51 +74,50 @@ def mask_results(results, should_mask):
 # 4. ЭНДПОИНТЫ
 @app.post("/api/start-audit")
 async def start_audit(request: AuditRequest, tg_id: int = Query(...)):
-    if tg_id is None:
-        return {"status": "error", "message": "Telegram ID не получен"}
+    # 1. Проверяем статус пользователя в БД
+    user_query = supabase.table("users").select("*").eq("tg_id", tg_id).execute()
 
-    try:
-        user_query = supabase.table("users").select("*").eq("tg_id", tg_id).execute()
-        if not user_query.data:
-            supabase.table("users").insert({"tg_id": tg_id, "is_first_audit_free": True}).execute()
-            is_first_free = True
-        else:
-            is_first_free = user_query.data[0]["is_first_audit_free"]
-    except Exception as e:
-        return {"status": "error", "message": f"Ошибка БД: {str(e)}"}
+    if not user_query.data:
+        supabase.table("users").insert({"tg_id": tg_id, "is_first_audit_free": True}).execute()
+        is_first_free = True
+    else:
+        is_first_free = user_query.data[0]["is_first_audit_free"]
 
-    # ЗАГЛУШКА ПОДПИСКИ (потом добавим проверку в БД)
+    # Проверка подписки (пока заглушка)
     has_subscription = False
 
-    # ОПРЕДЕЛЯЕМ СТАТУС БЛЮРА
-    is_blurred = not (is_first_free or has_subscription)
+    # 2. РЕШАЕМ: Делаем работу или нет?
+    can_perform_work = is_first_free or has_subscription
 
-    # Запускаем анализатор
-    try:
-        # Для бесплатной или заблюренной версии даем 2 месяца, для платной - год
+    if can_perform_work:
+        # ВЫПОЛНЯЕМ РЕАЛЬНЫЙ АНАЛИЗ (тратим ресурсы)
         results = run_audit(
             api_key=request.api_key,
             marketplace=request.marketplace,
-            is_free_tier=has_subscription
+            is_free_tier=not has_subscription
         )
-    except Exception as e:
-        return {"status": "error", "message": f"Ошибка анализа: {str(e)}"}
+        is_blurred = False
 
-    # Списываем бесплатную попытку только один раз
-    if is_first_free:
-        supabase.table("users").update({"is_first_audit_free": False}).eq("tg_id", tg_id).execute()
-    # 4. Если блюр активен — подменяем данные (защита от инспектора кода)
-    final_items = results["items"]
-    if is_blurred:
-        final_items = [
-            {"reason": item["reason"], "amount": "✱✱✱", "id": "скрыто"}
-            for item in results["items"]
-        ]
+        # Списываем бесплатную попытку, если она была использована
+        if is_first_free:
+            supabase.table("users").update({"is_first_audit_free": False}).eq("tg_id", tg_id).execute()
+    else:
+        # РАБОТУ НЕ ДЕЛАЕМ. Возвращаем пустые данные для визуализации блюра.
+        # Можно отправить случайную "красивую" сумму, чтобы раззадорить аппетит селлера.
+        results = {
+            "total": 25000,  # Имитация: "Мы могли бы найти столько-то"
+            "items": [
+                {"reason": "Скрыто", "amount": "✱✱✱", "id": "скрыто"},
+                {"reason": "Скрыто", "amount": "✱✱✱", "id": "скрыто"},
+                {"reason": "Скрыто", "amount": "✱✱✱", "id": "скрыто"}
+            ]
+        }
+        is_blurred = True
 
     return {
         "status": "success",
         "total_sum": results["total"],
-        "preview": final_items,  # Отдаем либо чистые, либо "испорченные" данные
+        "preview": results["items"],
         "is_blurred": is_blurred
     }
 @app.get("/api/download-claim", response_model=None)
