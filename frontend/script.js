@@ -4,6 +4,28 @@ const userId = tg.initDataUnsafe?.user?.id || 12345;
 const BACKEND_URL = "https://auditor-ixog.onrender.com";
 tg.expand(); 
 
+
+// Слушатель переключателей маркетплейсов
+document.querySelectorAll('input[name="marketplace"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        const clientIdGroup = document.getElementById('client-id-group');
+        const apiKeyLabel = document.getElementById('api-key-label');
+        const apiKeyInput = document.getElementById('api-key');
+
+        if (this.value === 'ozon') {
+            // Показываем Client ID, меняем подсказки для Ozon
+            clientIdGroup.style.display = 'block';
+            apiKeyLabel.innerText = 'API-ключ (Ozon)';
+            apiKeyInput.placeholder = 'Вставьте API-ключ Ozon...';
+        } else {
+            // Прячем Client ID, возвращаем подсказки для WB
+            clientIdGroup.style.display = 'none';
+            apiKeyLabel.innerText = 'API-ключ (Статистика WB)';
+            apiKeyInput.placeholder = 'Вставьте токен WB...';
+        }
+    });
+});
+
 function downloadPDF() {
     // Собираем данные из полей
     const name = document.getElementById('seller-name').value;
@@ -50,14 +72,18 @@ function renderResults(data) {
 
 async function runAudit() {
     const apiKey = document.getElementById('api-key').value;
-    if (!apiKey) return alert("Введите ключ!");
-
     const marketplace = document.querySelector('input[name="marketplace"]:checked').value;
+    const clientId = document.getElementById('client-id').value; // Берем Client ID
+
+    if (!apiKey) return alert("Введите ключ!");
+    // Валидация: если выбран Ozon, Client ID обязателен
+    if (marketplace === 'ozon' && !clientId) return alert("Введите Client-ID для Ozon!");
 
     // Собираем объект данных для отправки
     const auditData = {
         api_key: apiKey,
-        marketplace: marketplace
+        marketplace: marketplace,
+        client_id: marketplace === 'ozon' ? clientId : null // Добавили поле
     };
 
     // Переключаем экраны

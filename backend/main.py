@@ -4,6 +4,7 @@ from analyzer import run_audit
 from claims import create_claim_pdf
 from pydantic import BaseModel
 from supabase import create_client, Client
+from typing import Optional
 import os
 import asyncio
 import random
@@ -27,6 +28,7 @@ app.add_middleware(
 class AuditRequest(BaseModel):
     api_key: str
     marketplace: str
+    client_id: Optional[str] = None
 
 # 2. ДОБАВЛЯЕМ ПРОПУЩЕННЫЕ ФУНКЦИИ (Генератор данных)
 def get_mock_data(marketplace: str):
@@ -98,7 +100,8 @@ async def start_audit(request: AuditRequest, tg_id: int = Query(...)):
         results = run_audit(
             api_key=request.api_key,
             marketplace=request.marketplace,
-            is_free_tier=not has_subscription
+            is_free_tier=not has_subscription,
+            client_id=request.client_id
         )
         is_blurred = False
 

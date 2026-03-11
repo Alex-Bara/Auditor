@@ -19,8 +19,14 @@
             </div>
 
             <p>2. Вставь API-ключ:</p>
-            <div class="input-grop">
-                <input type="text" id="api-key" placeholder="Токен (только чтение)">
+            <div class="input-group">
+                <label for="api-key" id="api-key-label">API-ключ (Статистика)</label>
+                <input type="text" id="api-key" placeholder="Вставьте токен...">
+            </div>
+
+            <div class="input-group" id="client-id-group" style="display: none;">
+                <label for="client-id">Client-ID (только для Ozon)</label>
+                <input type="text" id="client-id" placeholder="Например: 123456">
             </div>
             <button class="main-button" onclick="runAudit()">Запустить сканирование</button>
         </div>
@@ -39,11 +45,20 @@
                 <h4>Данные для претензии:</h4>
                 <div class="input-grop">
                     <input type="text" id="seller-name" placeholder="ФИО ИП или Название ООО" class="main-input">
+                </div>
+                <div class="input-grop">
                     <input type="text" id="seller-inn" placeholder="ИНН" class="main-input">
+                </div>
+                <div class="input-grop">
                     <input type="text" id="seller-address" placeholder="Юридический адрес" class="main-input">
+                </div>
+                <div class="input-grop">
                     <input type="text" id="seller-bik" placeholder="БИК банка" class="main-input">
+                </div>
+                <div class="input-grop">
                     <input type="text" id="seller-account" placeholder="Номер счета (20 знаков)" class="main-input">
                 </div>
+
             </div>
     
             <div id="unlock-container" style="display: none; text-align: center; margin-top: 20px;">

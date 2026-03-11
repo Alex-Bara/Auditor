@@ -140,7 +140,7 @@ def process_ozon_data(raw_data: list) -> dict:
     }
 
 # ГЛАВНАЯ ФУНКЦИЯ ДЛЯ MAIN.PY
-def run_audit(api_key: str, marketplace: str, is_free_tier: bool) -> dict:
+def run_audit(api_key: str, marketplace: str, is_free_tier: bool, client_id: str = None) -> dict:
     # Определяем период
     end_date = datetime.now()
     if is_free_tier:
@@ -157,6 +157,7 @@ def run_audit(api_key: str, marketplace: str, is_free_tier: bool) -> dict:
         return process_wb_data(raw_data)
 
     elif marketplace == "ozon":
+        # В будущем мы передадим client_id в реальный запрос
         raw_data = fetch_ozon_transactions(api_key, str_start, str_end)
         return process_ozon_data(raw_data)
 
