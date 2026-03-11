@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import FastAPI, Response, Query, Body
 from fastapi.middleware.cors import CORSMiddleware
 from analyzer import run_audit
@@ -138,7 +140,17 @@ async def start_audit(request: AuditRequest, tg_id: int = Query(...)):
                 ]
             }
             is_blurred = True
+        # Сохраняем результаты в базу, чтобы потом вытащить их для PDF
+        # В функции start_audit, когда результаты получены:
+        results_to_save = {
+            "total": results["total"],
+            "items": results["items"],  # Здесь уже лежат наши артикулы и ID
+            "timestamp": datetime.now().isoformat()
+        }
 
+        supabase.table("users").update({
+            "last_audit_results": results_to_save
+        }).eq("tg_id", tg_id).execute()
         return {
             "status": "success",
             "total_sum": results["total"],
@@ -149,36 +161,47 @@ async def start_audit(request: AuditRequest, tg_id: int = Query(...)):
     except Exception as e:
         print(f"Audit Error: {e}")  # Логируем для себя
         return {"status": "error", "message": f"Ошибка сервера: {str(e)}"}
-@app.get("/api/download-claim", response_model=None)
-async def download(
-    total: str = "0", 
-    marketplace: str = "wb", 
-    seller_name: str = "Не указано", 
-    seller_inn: str = "0", 
-    seller_address: str = "-", 
-    account: str = "-", 
-    bik: str = "-"
-):
-    # Если фронт что-то забудет, сервер подставит дефолтное значение и не выдаст 422
-    seller_info = {
-        "name": seller_name,
-        "inn": seller_inn,
-        "address": seller_address,
-        "account": account,
-        "bik": bik
-    }
-    
-    mock_results = {
-        "total": total, 
-        "items": [{"reason": "Расхождение по отчету", "amount": total, "id": "AUTO-GEN"}]
-    }
-    pdf_content = create_claim_pdf(mock_results, seller_info)
-    
-    return Response(
-        content=bytes(pdf_content), 
-        media_type="application/pdf",
-        headers={"Content-Disposition": f"attachment; filename=claim_{marketplace}.pdf"}
-    )
+
+
+@app.get("/api/download-claim")
+async def download(tg_id: int = Query(...), marketplace: str = "wb"):
+    try:
+        # 1. Достаем данные пользователя и его последний аудит из базы
+        user_query = supabase.table("users").select("*").eq("tg_id", tg_id).execute()
+
+        if not user_query.data:
+            return {"status": "error", "message": "Пользователь не найден"}
+
+        user_data = user_query.data[0]
+
+        # 2. Формируем словарь селлера (из того, что он сохранил в профиле)
+        seller_info = {
+            "name": user_data.get("seller_name", "Не указано"),
+            "inn": user_data.get("inn", "0"),
+            "address": user_data.get("address", "-"),
+            "account": user_data.get("account", "-"),
+            "bik": user_data.get("bik", "-")
+        }
+
+        # 3. Достаем результаты последнего аудита (которые мы сохранили в start_audit)
+        # Предполагаем, что ты сохраняешь их в колонку last_audit_results (JSONB)
+        audit_results = user_data.get("last_audit_results")
+
+        if not audit_results:
+            return {"status": "error", "message": "Сначала запустите аудит"}
+
+        # 4. Генерируем PDF с реальными артикулами и ID
+        pdf_content = create_claim_pdf(audit_results, seller_info, marketplace)
+
+        return Response(
+            content=bytes(pdf_content),
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=Pretenziya_{marketplace}_{tg_id}.pdf"
+            }
+        )
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 
 @app.post("/api/save-profile")

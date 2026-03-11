@@ -79,19 +79,28 @@ def create_claim_pdf(audit_results, seller_info, marketplace_type="wb"):
     pdf.ln(5)
 
     # 4. ТАБЛИЦА НАРУШЕНИЙ
-    pdf.set_font(font_name, "B", size=10)
+    pdf.set_font(font_name, "B", size=9)
     pdf.set_fill_color(240, 240, 240)
-    pdf.cell(110, 10, "Основание (Детали нарушения)", 1, 0, "C", True)
-    pdf.cell(40, 10, "ID Операции", 1, 0, "C", True)
-    pdf.cell(40, 10, "Сумма (руб.)", 1, 1, "C", True)
 
-    pdf.set_font(font_name, size=9)
+    # Новые ширины колонок: Артикул (35), Обоснование (85), ID (35), Сумма (35)
+    pdf.cell(35, 10, "Артикул/SKU", 1, 0, "C", True)
+    pdf.cell(85, 10, "Основание (Детали нарушения)", 1, 0, "C", True)
+    pdf.cell(35, 10, "ID Операции", 1, 0, "C", True)
+    pdf.cell(35, 10, "Сумма (₽)", 1, 1, "C", True)
+
+    pdf.set_font(font_name, size=8)
     for item in audit_results['items']:
-        # Обрезаем текст, чтобы не ломал таблицу
-        reason = (item['reason'][:55] + '..') if len(item['reason']) > 55 else item['reason']
-        pdf.cell(110, 8, reason, 1)
-        pdf.cell(40, 8, str(item['id']), 1, 0, "C")
-        pdf.cell(40, 8, f"{item['amount']}", 1, 1, "R")
+        # Артикул
+        art = str(item.get('article', 'N/A'))[:15]
+        pdf.cell(35, 8, art, 1, 0, "C")
+
+        # Обоснование (обрезаем, если слишком длинное)
+        reason = (item['reason'][:45] + '..') if len(item['reason']) > 45 else item['reason']
+        pdf.cell(85, 8, reason, 1)
+
+        # ID и Сумма
+        pdf.cell(35, 8, str(item['id']), 1, 0, "C")
+        pdf.cell(35, 8, f"{item['amount']}", 1, 1, "R")
 
     pdf.set_font(font_name, "B", size=11)
     pdf.cell(150, 10, "ИТОГО К ВОЗВРАТУ:", 0, 0, "R")

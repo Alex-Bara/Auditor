@@ -125,24 +125,12 @@ document.querySelectorAll('input[name="marketplace"]').forEach(radio => {
 });
 
 function downloadPDF() {
-    const name = document.getElementById('seller-name').value;
-    const inn = document.getElementById('seller-inn').value;
-    const address = document.getElementById('seller-address').value;
-    const bik = document.getElementById('seller-bik')?.value || ""; 
-    const acc = document.getElementById('seller-account')?.value || ""; 
+    const marketplace = lastAuditData.marketplace || 'wb';
+    // Просто переходим по ссылке с ID пользователя
+    const url = `${BACKEND_URL}/api/download-claim?tg_id=${userId}&marketplace=${marketplace}`;
 
-    const params = new URLSearchParams({
-        total: lastAuditData.total || 0,
-        marketplace: lastAuditData.marketplace,
-        seller_name: name,
-        seller_inn: inn,
-        seller_address: address,
-        account: acc,
-        bik: bik
-    });
-    
-    const url = `${BACKEND_URL}/api/download-claim?${params.toString()}`;
-    Telegram.WebApp.openLink(url);
+    // Используем стандартный метод Telegram для открытия ссылок
+    tg.openLink(url);
 }
 
 function renderResults(data) {

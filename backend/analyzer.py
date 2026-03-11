@@ -60,6 +60,7 @@ def process_wb_data(raw_data: list) -> dict:
             total_found += amount
             discrepancies.append({
                 "id": str(item.get("rrid", "N/A")),
+                "article": str(item.get("nm_id", "Не указан")),  # Артикул WB
                 "reason": reason,
                 "amount": round(amount, 2)
             })
@@ -125,8 +126,12 @@ def process_ozon_data(raw_data: list) -> dict:
 
         if amount > 0:
             total_found += amount
+            items_list = item.get("items", [])
+            offer_id = items_list[0].get("offer_id", "N/A") if items_list else "N/A"
+
             discrepancies.append({
                 "id": str(item.get("operation_id", "N/A")),
+                "article": offer_id,  # Ваш артикул в кабинете Ozon
                 "reason": reason,
                 "amount": round(amount, 2)
             })
