@@ -97,7 +97,7 @@ async def start_audit(request: AuditRequest, tg_id: int = Query(...)):
     if can_see_details:
         # ВЫПОЛНЯЕМ РЕАЛЬНЫЙ АНАЛИЗ
         # Если есть подписка — анализируем год, если только бесплатная попытка — 2 месяца
-        results = run_audit(
+        results = await run_audit(
             api_key=request.api_key,
             marketplace=request.marketplace,
             is_free_tier=not has_subscription,
