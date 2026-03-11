@@ -74,23 +74,27 @@ def mask_results(results, should_mask):
 # 4. ЭНДПОИНТЫ
 @app.post("/api/start-audit")
 async def start_audit(request: AuditRequest, tg_id: int = Query(...)):
-    # 1. Проверяем статус пользователя в БД
+    # 1. Получаем полные данные пользователя
     user_query = supabase.table("users").select("*").eq("tg_id", tg_id).execute()
 
     if not user_query.data:
-        supabase.table("users").insert({"tg_id": tg_id, "is_first_audit_free": True}).execute()
+        # Новый пользователь
+        supabase.table("users").insert(
+            {"tg_id": tg_id, "is_first_audit_free": True, "has_subscription": False}).execute()
         is_first_free = True
+        has_subscription = False
     else:
+        # Существующий пользователь
         is_first_free = user_query.data[0]["is_first_audit_free"]
-
-    # Проверка подписки (пока заглушка)
-    has_subscription = False
+        has_subscription = user_query.data[0].get("has_subscription", False)
 
     # 2. РЕШАЕМ: Делаем работу или нет?
-    can_perform_work = is_first_free or has_subscription
+    # Работаем, если это первый раз ИЛИ если куплена подписка
+    can_see_details = is_first_free or has_subscription
 
-    if can_perform_work:
-        # ВЫПОЛНЯЕМ РЕАЛЬНЫЙ АНАЛИЗ (тратим ресурсы)
+    if can_see_details:
+        # ВЫПОЛНЯЕМ РЕАЛЬНЫЙ АНАЛИЗ
+        # Если есть подписка — анализируем год, если только бесплатная попытка — 2 месяца
         results = run_audit(
             api_key=request.api_key,
             marketplace=request.marketplace,
@@ -98,18 +102,17 @@ async def start_audit(request: AuditRequest, tg_id: int = Query(...)):
         )
         is_blurred = False
 
-        # Списываем бесплатную попытку, если она была использована
+        # Списываем бесплатную попытку только если она была активна
         if is_first_free:
             supabase.table("users").update({"is_first_audit_free": False}).eq("tg_id", tg_id).execute()
     else:
-        # РАБОТУ НЕ ДЕЛАЕМ. Возвращаем пустые данные для визуализации блюра.
-        # Можно отправить случайную "красивую" сумму, чтобы раззадорить аппетит селлера.
+        # ОТКАЗ В ДОСТУПЕ: Возвращаем "заглушку"
         results = {
-            "total": 25000,  # Имитация: "Мы могли бы найти столько-то"
+            "total": 42000,  # Примерная сумма для мотивации
             "items": [
-                {"reason": "Скрыто", "amount": "✱✱✱", "id": "скрыто"},
-                {"reason": "Скрыто", "amount": "✱✱✱", "id": "скрыто"},
-                {"reason": "Скрыто", "amount": "✱✱✱", "id": "скрыто"}
+                {"reason": "Аномальная логистика", "amount": "✱✱✱", "id": "скрыто"},
+                {"reason": "Ошибка в отчете реализации", "amount": "✱✱✱", "id": "скрыто"},
+                {"reason": "Необоснованный штраф", "amount": "✱✱✱", "id": "скрыто"}
             ]
         }
         is_blurred = True
@@ -120,6 +123,7 @@ async def start_audit(request: AuditRequest, tg_id: int = Query(...)):
         "preview": results["items"],
         "is_blurred": is_blurred
     }
+
 @app.get("/api/download-claim", response_model=None)
 async def download(
     total: str = "0", 

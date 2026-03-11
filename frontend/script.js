@@ -72,7 +72,6 @@ async function runAudit() {
         });
 
         const data = await response.json();
-        console.log("Ответ сервера:", data);
 
         if (data.status === "success") {
             lastAuditData.total = data.total_sum;
