@@ -50,6 +50,27 @@ function showHelp(type) {
     }
     tg.showAlert(message);
 }
+async function pay(method, amount) {
+    if (method === 'stars') {
+        // Логика для Telegram Stars (Invoice)
+        const response = await fetch(`${BACKEND_URL}/api/create-stars-invoice?tg_id=${userId}&amount=${amount}`);
+        const data = await response.json();
+
+        if (data.link) {
+            tg.openInvoice(data.link, (status) => {
+                if (status === 'paid') {
+                    tg.showAlert("Оплата принята! Перезапуск...");
+                    location.reload(); // Обновляем, чтобы подтянулась подписка
+                }
+            });
+        }
+    } else {
+        // Логика для Карт (ЮKassa/Robokassa)
+        tg.showAlert("Оплата картами временно через менеджера или внешнюю ссылку.");
+        // Здесь будет переход на платежную форму эквайринга
+        // window.location.href = data.payment_url;
+    }
+}
 
 function showInputScreen() {
     document.getElementById('screen-loading').style.display = 'none';

@@ -10,7 +10,9 @@ from typing import Optional
 import os
 import asyncio
 import random
+import httpx
 
+BOT_TOKEN = "8636041832:AAE8z7AQQc1gxiWfX-iwRwC27GBZDqTpj1Y"
 app = FastAPI()
 # Данные берем из переменных окружения Render (Environment Variables)
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
@@ -132,6 +134,31 @@ async def start_audit(request: AuditRequest, tg_id: int = Query(...)):
     except Exception as e:
         return {"status": "error", "message": f"Ошибка анализа: {str(e)}"}
 
+
+@app.get("/api/test-stars")
+async def test_stars(tg_id: int = Query(...)):
+    """Эндпоинт для проверки: создает инвойс на 1 Звезду"""
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/createInvoiceLink"
+
+    payload = {
+        "title": "Тестовая покупка",
+        "description": "Проверка работы Telegram Stars",
+        "payload": f"test_{tg_id}",
+        "currency": "XTR",  # ЭТО КЛЮЧЕВОЙ МОМЕНТ
+        "prices": [{"label": "1 Звезда", "amount": 1}]
+    }
+
+    async with httpx.AsyncClient() as client:
+        r = await client.post(url, json=payload)
+        return r.json()
+
+@app.get("/api/create-stars-invoice")
+async def create_invoice(tg_id: int, amount: int):
+    # Это упрощенный пример. В реальности вызывается метод sendInvoice
+    # через библиотеку aiogram или напрямую через API Телеграм.
+    invoice_link = f"https://t.me/invoice/example_link" # Ссылка генерируется ботом
+    return {"link": invoice_link}
+
 @app.get("/api/download-claim")
 async def download(tg_id: int = Query(...), marketplace: str = "wb"):
     try:
@@ -172,7 +199,6 @@ async def download(tg_id: int = Query(...), marketplace: str = "wb"):
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
-
 @app.post("/api/save-profile")
 async def save_profile(profile: UserProfile, tg_id: int = Query(...)):
     try:
@@ -190,7 +216,6 @@ async def save_profile(profile: UserProfile, tg_id: int = Query(...)):
         return {"status": "success", "message": "Реквизиты сохранены"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
-
 
 # Также обновим получение данных, чтобы при входе в приложение
 # мы могли подтянуть старые реквизиты

@@ -36,6 +36,24 @@
             </div>
             <button class="main-button" onclick="runAudit()">Запустить сканирование</button>
         </div>
+        <div id="screen-subscription" style="display:none;" class="card">
+            <h2>💎 Доступ ограничен</h2>
+            <p>Ваша бесплатная проверка завершена. Выберите тариф, чтобы продолжить:</p>
+
+            <div class="offers-list">
+                <div class="offer-item" onclick="pay('stars', 500)">
+                    <span>Месяц безлимита</span>
+                    <button>500 ⭐ Stars</button>
+                </div>
+
+                <div class="offer-item" onclick="pay('card', 1490)">
+                    <span>Месяц безлимита</span>
+                    <button>1490 ₽ Карта РФ</button>
+                </div>
+            </div>
+
+            <button class="btn-secondary" onclick="showInputScreen()">Назад</button>
+        </div>
         <div id="screen-loading" style="display: none; text-align: center; padding-top: 50px;">
             <div class="spinner"></div>
             <div class="loader"></div>
