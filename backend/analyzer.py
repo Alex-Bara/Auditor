@@ -2,6 +2,24 @@ from datetime import datetime, timedelta
 import httpx
 import asyncio
 
+async def fetch_wb_seller_info(api_key: str) -> dict:
+    """Получаем данные о продавце из WB (используем эндпоинт лимитов или тарифов)"""
+    url = "https://common-api.wildberries.ru/api/v1/info" # Пример эндпоинта
+    headers = {"Authorization": api_key}
+    async with httpx.AsyncClient() as client:
+        try:
+            # Если спец. эндпоинта нет под рукой, WB часто отдает заголовок или
+            # данные о владельце в других запросах.
+            # Для теста вернем пустой или парсим из доступных.
+            return {"name": "ООО Загрузка...", "inn": ""}
+        except:
+            return {}
+
+async def fetch_ozon_seller_info(client_id: str, api_key: str) -> dict:
+    """Ozon в некоторых отчетах сразу пишет название компании"""
+    # В v3/finance/transaction/list данных о самом селлере мало,
+    # но их можно вытянуть из /v1/whoami (условный эндпоинт)
+    return {"name": f"Seller #{client_id}", "inn": ""}
 
 # ==========================================
 # 1. WILDBERRIES: РАБОТА С API СТАТИСТИКИ

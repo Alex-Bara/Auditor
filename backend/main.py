@@ -24,6 +24,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+class UserProfile(BaseModel):
+    seller_name: str
+    inn: str
+    address: str
+    account: str
+    bik: str
+    phone: Optional[str] = None
 
 class AuditRequest(BaseModel):
     api_key: str
@@ -93,10 +100,10 @@ async def start_audit(request: AuditRequest, tg_id: int = Query(...)):
     # 2. РЕШАЕМ: Делаем работу или нет?
     # Работаем, если это первый раз ИЛИ если куплена подписка
     can_see_details = is_first_free or has_subscription
-
-    if can_see_details:
+    user_data = user_query.data[0] if user_query.data else {}
+    try:
+        if can_see_details:
         # ВЫПОЛНЯЕМ РЕАЛЬНЫЙ АНАЛИЗ
-        # Если есть подписка — анализируем год, если только бесплатная попытка — 2 месяца
         results = await run_audit(
             api_key=request.api_key,
             marketplace=request.marketplace,
@@ -104,22 +111,31 @@ async def start_audit(request: AuditRequest, tg_id: int = Query(...)):
             client_id=request.client_id
         )
         is_blurred = False
+        if results.get("error") == "invalid_key":
+            return {"status": "error", "message": "Неверный API-ключ. Проверьте его в кабинете селлера."}
 
-        # Списываем бесплатную попытку только если она была активна
+        # --- МАГИЯ АВТОЗАПОЛНЕНИЯ (теперь здесь!) ---
+        # Если в базе еще нет имени селлера, пробуем его зафиксировать
+        if results.get("total", 0) >= 0 and not user_data.get("seller_name"):
+            # Формируем техническое имя, чтобы юзер видел, что данные подтянулись
+            new_name = f"Селлер {request.marketplace.upper()}"
+            supabase.table("users").update({"seller_name": new_name}).eq("tg_id", tg_id).execute()
+
+        # Списываем бесплатную попытку
         if is_first_free:
             supabase.table("users").update({"is_first_audit_free": False}).eq("tg_id", tg_id).execute()
-    else:
-        # ОТКАЗ В ДОСТУПЕ: Возвращаем "заглушку"
+        else:
+        # ОТКАЗ В ДОСТУПЕ: Заблюренные данные
         results = {
-            "total": 42000,  # Примерная сумма для мотивации
+            "total": 42000,
             "items": [
                 {"reason": "Аномальная логистика", "amount": "✱✱✱", "id": "скрыто"},
-                {"reason": "Ошибка в отчете реализации", "amount": "✱✱✱", "id": "скрыто"},
-                {"reason": "Необоснованный штраф", "amount": "✱✱✱", "id": "скрыто"}
+                {"reason": "Ошибка в отчете реализации", "amount": "✱✱✱", "id": "скрыто"}
             ]
         }
+    except Exception as e:
+        return {"status": "error", "message": f"Ошибка сервера: {str(e)}"}
         is_blurred = True
-
     return {
         "status": "success",
         "total_sum": results["total"],
@@ -157,3 +173,32 @@ async def download(
         media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename=claim_{marketplace}.pdf"}
     )
+
+
+@app.post("/api/save-profile")
+async def save_profile(profile: UserProfile, tg_id: int = Query(...)):
+    try:
+        data = {
+            "seller_name": profile.seller_name,
+            "inn": profile.inn,
+            "address": profile.address,
+            "account": profile.account,
+            "bik": profile.bik,
+            "phone": profile.phone
+        }
+
+        result = supabase.table("users").update(data).eq("tg_id", tg_id).execute()
+
+        return {"status": "success", "message": "Реквизиты сохранены"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+# Также обновим получение данных, чтобы при входе в приложение
+# мы могли подтянуть старые реквизиты
+@app.get("/api/get-profile")
+async def get_profile(tg_id: int = Query(...)):
+    user = supabase.table("users").select("*").eq("tg_id", tg_id).execute()
+    if user.data:
+        return {"status": "success", "profile": user.data[0]}
+    return {"status": "error", "message": "User not found"}

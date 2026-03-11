@@ -4,6 +4,46 @@ const userId = tg.initDataUnsafe?.user?.id || 12345;
 const BACKEND_URL = "https://auditor-ixog.onrender.com";
 tg.expand(); 
 
+// Вызываем при старте приложения
+async function loadUserData() {
+    const tg_id = window.Telegram.WebApp.initDataUnsafe.user.id;
+    const response = await fetch(`/api/get-profile?tg_id=${tg_id}`);
+    const data = await response.json();
+
+    if (data.status === "success" && data.profile) {
+        const p = data.profile;
+        // Заполняем поля формы (если они есть в DOM)
+        if(document.getElementById('seller-name')) document.getElementById('seller-name').value = p.seller_name || '';
+        if(document.getElementById('seller-inn')) document.getElementById('seller-inn').value = p.inn || '';
+        if(document.getElementById('seller-address')) document.getElementById('seller-address').value = p.address || '';
+        if(document.getElementById('seller-bik')) document.getElementById('seller-bik').value = p.bik || '';
+        if(document.getElementById('seller-account')) document.getElementById('seller-account').value = p.account || '';
+    }
+}
+
+// Функция сохранения
+async function saveProfile() {
+    const profile = {
+        seller_name: document.getElementById('seller-name').value,
+        inn: document.getElementById('seller-inn').value,
+        address: document.getElementById('seller-address').value,
+        bik: document.getElementById('seller-bik').value,
+        account: document.getElementById('seller-account').value
+    };
+
+    const tg_id = window.Telegram.WebApp.initDataUnsafe.user.id;
+
+    const response = await fetch(`/api/save-profile?tg_id=${tg_id}`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(profile)
+    });
+
+    const res = await response.json();
+    if(res.status === 'success') {
+        tg.showAlert("Данные успешно сохранены!");
+    }
+}
 
 // Слушатель переключателей маркетплейсов
 document.querySelectorAll('input[name="marketplace"]').forEach(radio => {
@@ -109,6 +149,7 @@ async function runAudit() {
             document.getElementById('result-sum').innerText = data.total_sum.toLocaleString();
 
             renderResults(data);
+            await loadUserData();
 
             const unlockContainer = document.getElementById('unlock-container');
             const downloadBtn = document.getElementById('download-btn');
