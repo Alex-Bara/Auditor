@@ -4,6 +4,12 @@ const userId = tg.initDataUnsafe?.user?.id || 12345;
 const BACKEND_URL = "https://auditor-ixog.onrender.com";
 tg.expand(); 
 
+function showInputScreen() {
+    document.getElementById('screen-loading').style.display = 'none';
+    document.getElementById('screen-result').style.display = 'none'; // Скрываем результаты
+    document.getElementById('screen-input').style.display = 'block'; // Показываем ввод
+}
+
 // Вызываем при старте приложения
 async function loadUserData() {
     const tg_id = window.Telegram.WebApp.initDataUnsafe.user.id;
@@ -137,41 +143,49 @@ async function runAudit() {
             body: JSON.stringify(auditData)
         });
 
+        // Проверяем, что сервер вообще ответил (статус 200-299)
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || "Ошибка сервера");
+        }
+
         const data = await response.json();
 
         if (data.status === "success") {
+            // 1. Сохраняем данные для PDF
             lastAuditData.total = data.total_sum;
             lastAuditData.marketplace = marketplace;
 
+            // 2. Убираем лоадер и показываем результат
             document.getElementById('screen-loading').style.display = 'none';
             document.getElementById('screen-result').style.display = 'block';
 
+            // 3. Обновляем цифры на экране
             document.getElementById('result-sum').innerText = data.total_sum.toLocaleString();
 
+            // 4. Отрисовываем таблицу (включая блюр, если нужно)
             renderResults(data);
+
+            // 5. ПОДТЯГИВАЕМ СОХРАНЕННЫЕ РЕКВИЗИТЫ
             await loadUserData();
 
+            // 6. Логика кнопок (Разблокировать vs Скачать)
             const unlockContainer = document.getElementById('unlock-container');
             const downloadBtn = document.getElementById('download-btn');
 
-            // Если данные НЕ заблюрены (первый раз или есть подписка) - показываем скачивание PDF
             if (data.is_blurred) {
-                // ПОКАЗЫВАЕМ кнопку оплаты, ПРЯЧЕМ кнопку скачивания
                 unlockContainer.style.display = 'block';
                 downloadBtn.style.display = 'none';
                 document.getElementById('found-sum-hint').innerText = data.total_sum.toLocaleString();
             } else {
-                document.getElementById('download-btn').style.display = 'block';
                 unlockContainer.style.display = 'none';
+                downloadBtn.style.display = 'block';
             }
         } else {
-            const errorMsg = data.message || JSON.stringify(data.detail) || "Неизвестная ошибка";
-            alert("Ошибка: " + errorMsg);
-            // Возвращаем на главный экран при ошибке
-            document.getElementById('screen-loading').style.display = 'none';
-            document.getElementById('screen-input').style.display = 'block';
+            // Сервер вернул status: "error" (например, неверный API ключ)
+            alert(data.message || "Ошибка при сканировании");
+            showInputScreen(); // Возвращаем форму ввода
         }
-
     } catch (e) {
         console.error(e);
         alert("Ошибка связи с сервером!");
