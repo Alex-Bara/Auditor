@@ -164,24 +164,15 @@ async def create_invoice(tg_id: int = Query(...), amount: int = 500):
 @app.post("/webhook/telegram")
 async def telegram_webhook(request: Request):
     data = await request.json()
-
-    # Telegram присылает успешную оплату в объекте message -> successful_payment
     if "message" in data and "successful_payment" in data["message"]:
-        pay_info = data["message"]["successful_payment"]
-        payload = pay_info.get("invoice_payload", "")  # Наша метка "sub_12345"
-
+        payload = data["message"]["successful_payment"].get("invoice_payload", "")
         if payload.startswith("sub_"):
-            user_id = int(payload.split("_")[1])
-
-            # Обновляем статус в Supabase
+            uid = int(payload.split("_")[1])
+            expire = (datetime.now() + timedelta(days=30)).isoformat()
             supabase.table("users").update({
                 "has_subscription": True,
-                "is_first_audit_free": False,
-                "subscription_until": (datetime.now() + timedelta(days=30)).isoformat()
-            }).eq("tg_id", user_id).execute()
-
-            print(f"!!! ОПЛАТА УСПЕШНА: Доступ открыт !!!")
-
+                "subscription_until": expire
+            }).eq("tg_id", uid).execute()
     return {"ok": True}
 
 @app.get("/api/create-stars-invoice")
