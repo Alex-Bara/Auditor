@@ -100,6 +100,12 @@ async def start_audit(request: AuditRequest, tg_id: int = Query(...)):
         user_data = user_query.data[0]
         is_first_free = user_data.get("is_first_audit_free", False)
         has_subscription = user_data.get("has_subscription", False)
+        # Если подписка активна, но срок истек — сбрасываем её
+    if user_data.get("subscription_until"):
+        until = datetime.fromisoformat(user_data["subscription_until"])
+        if datetime.now() > until:
+            supabase.table("users").update({"has_subscription": False}).eq("tg_id", tg_id).execute()
+            has_subscription = False
 
     # 2. ЖЕСТКАЯ ПРОВЕРКА ДОСТУПА
     if not (is_first_free or has_subscription):
@@ -131,10 +137,8 @@ async def start_audit(request: AuditRequest, tg_id: int = Query(...)):
             "total_sum": results["total"],
             "preview": results["items"]
         }
-
     except Exception as e:
         return {"status": "error", "message": f"Ошибка анализа: {str(e)}"}
-
 
 # 1. ЭНДПОИНТ СОЗДАНИЯ СЧЕТА (Для фронтенда)
 @app.get("/api/create-stars-invoice")

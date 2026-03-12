@@ -50,6 +50,7 @@ function showHelp(type) {
     }
     tg.showAlert(message);
 }
+
 async function pay(method, amount) {
     if (method === 'stars') {
         // Логика для Telegram Stars (Invoice)
