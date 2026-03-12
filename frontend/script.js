@@ -207,7 +207,9 @@ async function runAudit() {
     const apiKey = document.getElementById('api-key').value;
     const marketplace = document.querySelector('input[name="marketplace"]:checked').value;
     const clientId = document.getElementById('client-id').value;
+    const infoBlock = document.getElementsByClassName("info-title")
 
+    infoBlock.style = "display: none;"
     if (!apiKey) return tg.showAlert("Введите API-ключ!");
     if (marketplace === 'ozon' && !clientId) return tg.showAlert("Введите Client-ID для Ozon!");
 

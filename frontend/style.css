@@ -144,7 +144,7 @@ input:focus {
 
 .info-block {
     margin: 0 auto;
-    color: #333;
+    color: #333333;
     background-color: #f9f9f9; /* Фоновый цвет */
     border: 1px solid #ddd; /* Граница */
     padding: 20px; /* Внутренние отступы */
