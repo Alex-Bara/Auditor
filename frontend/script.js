@@ -5,6 +5,18 @@ let loadingInterval;
 const BACKEND_URL = "https://auditor-ixog.onrender.com";
 tg.expand(); 
 
+function safeAlert(message) {
+    try {
+        if (tg.isVersionAtLeast && tg.isVersionAtLeast('6.2')) {
+            safeAlert(message);
+        } else {
+            alert(message); // Стандартный браузерный alert как фоллбэк
+        }
+    } catch (e) {
+        alert(message);
+    }
+}
+
 function startLoadingAnimation(marketplace) {
     const loadingText = document.getElementById('loading-text');
     const steps = [
@@ -47,7 +59,7 @@ function showHelp(type) {
             "      3. Создайте новый ключ с типом 'Статистика'.\n\n" +
             "      Это безопасно: мы не имеем доступа к вашим заказам или изменению цен.";
     }
-    tg.showAlert(message);
+    safeAlert(message);
 }
 
 async function pay(method, amount) {
@@ -59,14 +71,14 @@ async function pay(method, amount) {
         if (data.link) {
             tg.openInvoice(data.link, (status) => {
                 if (status === 'paid') {
-                    tg.showAlert("Оплата принята! Перезапуск...");
+                    safeAlert("Оплата принята! Перезапуск...");
                     location.reload(); // Обновляем, чтобы подтянулась подписка
                 }
             });
         }
     } else {
         // Логика для Карт (ЮKassa/Robokassa)
-        tg.showAlert("Оплата картами временно через менеджера или внешнюю ссылку.");
+        safeAlert("Оплата картами временно через менеджера или внешнюю ссылку.");
         // Здесь будет переход на платежную форму эквайринга
         // window.location.href = data.payment_url;
     }
@@ -82,7 +94,7 @@ async function buySubscription(starsAmount) {
             // 2. Открываем нативное окно оплаты
             tg.openInvoice(data.link, (status) => {
                 if (status === 'paid') {
-                    tg.showAlert("Оплата принята!");
+                    safeAlert("Оплата принята!");
                     // Перезагружаем или переключаем экран
                     window.location.reload();
                 } else if (status === 'cancelled') {
@@ -91,7 +103,7 @@ async function buySubscription(starsAmount) {
             });
         }
     } catch (e) {
-        tg.showAlert("Ошибка при создании счета. Попробуйте позже.");
+        safeAlert("Ошибка при создании счета. Попробуйте позже.");
     }
 }
 
@@ -146,7 +158,7 @@ async function saveProfile() {
 
     const res = await response.json();
     if(res.status === 'success') {
-        tg.showAlert("Данные успешно сохранены!");
+        safeAlert("Данные успешно сохранены!");
     }
 }
 
@@ -210,8 +222,8 @@ async function runAudit() {
     const infoBlock = document.getElementsByClassName("info-title")
 
     infoBlock.style = "display: none;"
-    if (!apiKey) return tg.showAlert("Введите API-ключ!");
-    if (marketplace === 'ozon' && !clientId) return tg.showAlert("Введите Client-ID для Ozon!");
+    if (!apiKey) return safeAlert("Введите API-ключ!");
+    if (marketplace === 'ozon' && !clientId) return safeAlert("Введите Client-ID для Ozon!");
 
     const auditData = {
         api_key: apiKey,
@@ -247,12 +259,14 @@ async function runAudit() {
             // Показываем результат (он теперь всегда разблокирован, раз мы сюда дошли)
             showResultScreen(data);
         } else {
-            tg.showAlert(data.message);
+            safeAlert(data.message);
             showInputScreen();
         }
     } catch (e) {
         stopLoadingAnimation();
-        tg.showAlert("Ошибка связи");
+        console.error(e);
+        document.getElementById('screen-loading').style.display = 'none';
+        safeAlert("Ошибка: " + e.message);
         showInputScreen();
     }
 }
