@@ -37,7 +37,6 @@ if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
     userId = tg.initDataUnsafe.user.id;
 } else {
     userId = 123456789;
-    console.warn("Telegram WebApp не обнаружен. Используем тестовый ID.");
 }
 
 function showHelp(type) {
