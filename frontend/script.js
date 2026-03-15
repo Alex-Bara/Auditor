@@ -61,7 +61,7 @@ function runDemo() {
             demoNotice.innerHTML = `
                 <div style="background: #fff3cd; color: #856404; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; text-align: center;">
                     🚀 Это демонстрационные данные. Чтобы найти реальные ошибки, введите ваши API-ключи.
-                    <a href="#" onclick="showInputScreen()">На главную</a>
+                    <br><a href="#" onclick="showInputScreen()">На главную</a>
                 </div>
             `;
             resultsScreen.prepend(demoNotice);
