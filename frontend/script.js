@@ -17,6 +17,48 @@ function safeAlert(message) {
     }
 }
 
+function runDemo() {
+    // Показываем короткую анимацию загрузки для реалистичности
+    showLoading();
+
+    setTimeout(() => {
+        hideLoading();
+
+        // Моковые (тестовые) данные
+        const demoData = {
+            status: "success",
+            total_sum: 84350,
+            preview: [
+                { article: "Платье миди шелк", reason: "Логистика: неверные габариты", amount: 12500, id: "DEMO-1" },
+                { article: "Сумка кожаная", reason: "Дублирование штрафа", amount: 4800, id: "DEMO-2" },
+                { article: "Туфли Classic", reason: "Неучтенный возврат", amount: 3200, id: "DEMO-3" }
+            ],
+            is_demo: true // Пометка, что это демо
+        };
+
+        showResults(demoData);
+
+        // Добавим плашку, что это демо
+        const resultsScreen = document.getElementById('screen-results');
+        const demoNotice = document.createElement('div');
+        demoNotice.id = 'demo-banner';
+        demoNotice.innerHTML = `
+            <div style="background: #fff3cd; color: #856404; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; text-align: center;">
+                🚀 Это демонстрационные данные. Чтобы найти реальные ошибки в вашем кабинете, введите API-ключи.
+            </div>
+        `;
+        resultsScreen.prepend(demoNotice);
+
+        // Блокируем кнопку скачивания PDF в демо-режиме
+        const downloadBtn = document.getElementById('btn-download');
+        downloadBtn.onclick = () => {
+            alert("Скачивание PDF доступно только после реального аудита вашего кабинета.");
+            showInputScreen();
+        };
+
+    }, 1500);
+}
+
 function startLoadingAnimation(marketplace) {
     const loadingText = document.getElementById('loading-text');
     const steps = [
@@ -37,7 +79,7 @@ function startLoadingAnimation(marketplace) {
         if (currentStep < steps.length) {
             loadingText.innerText = steps[currentStep];
         }
-    }, 2000); // Меняем текст каждые 2 секунды
+    }, 2000);
 }
 
 function stopLoadingAnimation() {
