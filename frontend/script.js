@@ -36,7 +36,7 @@ function runDemo() {
             is_demo: true // Пометка, что это демо
         };
 
-        showResults(demoData);
+        renderResults(demoData);
 
         // Добавим плашку, что это демо
         const resultsScreen = document.getElementById('screen-results');
