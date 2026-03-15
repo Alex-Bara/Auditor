@@ -8,23 +8,38 @@ tg.expand();
 function safeAlert(message) {
     try {
         if (tg.isVersionAtLeast && tg.isVersionAtLeast('6.2')) {
-            safeAlert(message);
+            tg.showAlert(message);
         } else {
-            alert(message); // Стандартный браузерный alert как фоллбэк
+            alert(message);
         }
     } catch (e) {
         alert(message);
     }
 }
 
+function showResultScreen(data) {
+    lastAuditData.total = data.total_sum;
+    const selectedMarketplace = document.querySelector('input[name="marketplace"]:checked');
+    lastAuditData.marketplace = selectedMarketplace ? selectedMarketplace.value : 'wb';
+
+    document.getElementById('total-amount').innerText = data.total_sum.toLocaleString() + " ₽";
+    renderResults(data);
+
+    document.getElementById('screen-loading').style.display = 'none';
+    document.getElementById('screen-input').style.display = 'none';
+    document.getElementById('screen-result').style.display = 'block';
+}
+
 function runDemo() {
-    // Показываем короткую анимацию загрузки для реалистичности
-    startLoadingAnimation();
+    startLoadingAnimation('wb');
+
+    // Переключаем на экран загрузки
+    document.getElementById('screen-input').style.display = 'none';
+    document.getElementById('screen-loading').style.display = 'block';
 
     setTimeout(() => {
         stopLoadingAnimation();
 
-        // Моковые (тестовые) данные
         const demoData = {
             status: "success",
             total_sum: 84350,
@@ -33,28 +48,31 @@ function runDemo() {
                 { article: "Сумка кожаная", reason: "Дублирование штрафа", amount: 4800, id: "DEMO-2" },
                 { article: "Туфли Classic", reason: "Неучтенный возврат", amount: 3200, id: "DEMO-3" }
             ],
-            is_demo: true // Пометка, что это демо
+            is_demo: true
         };
 
-        renderResults(demoData);
+        showResultScreen(demoData);
 
-        // Добавим плашку, что это демо
-        const resultsScreen = document.getElementById('screen-result');
-        const demoNotice = document.createElement('div');
-        demoNotice.id = 'demo-banner';
-        demoNotice.innerHTML = `
-            <div style="background: #fff3cd; color: #856404; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; text-align: center;">
-                🚀 Это демонстрационные данные. Чтобы найти реальные ошибки в вашем кабинете, введите API-ключи.
-            </div>
-        `;
-        resultsScreen.prepend(demoNotice);
+        // Проверяем, нет ли уже баннера, чтобы не плодить их при повторном нажатии
+        if (!document.getElementById('demo-banner')) {
+            const resultsScreen = document.getElementById('screen-result');
+            const demoNotice = document.createElement('div');
+            demoNotice.id = 'demo-banner';
+            demoNotice.innerHTML = `
+                <div style="background: #fff3cd; color: #856404; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; text-align: center;">
+                    🚀 Это демонстрационные данные. Чтобы найти реальные ошибки, введите ваши API-ключи.
+                </div>
+            `;
+            resultsScreen.prepend(demoNotice);
+        }
 
-        // Блокируем кнопку скачивания PDF в демо-режиме
         const downloadBtn = document.getElementById('download-btn');
-        downloadBtn.onclick = () => {
-            alert("Скачивание PDF доступно только после реального аудита вашего кабинета.");
-            showInputScreen();
-        };
+        if (downloadBtn) {
+            downloadBtn.onclick = () => {
+                alert("Скачивание PDF доступно только после реального аудита вашего кабинета.");
+                showInputScreen();
+            };
+        }
 
     }, 1500);
 }
@@ -261,9 +279,9 @@ async function runAudit() {
     const apiKey = document.getElementById('api-key').value;
     const marketplace = document.querySelector('input[name="marketplace"]:checked').value;
     const clientId = document.getElementById('client-id').value;
-    const infoBlock = document.getElementsByClassName("info-title")
+    const infoBlock = document.querySelector(".info-title");
+    if (infoBlock) infoBlock.style.display = "none";
 
-    infoBlock.style = "display: none;"
     if (!apiKey) return safeAlert("Введите API-ключ!");
     if (marketplace === 'ozon' && !clientId) return safeAlert("Введите Client-ID для Ozon!");
 
