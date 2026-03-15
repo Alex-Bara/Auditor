@@ -59,6 +59,7 @@
                 <button class="main-button" onclick="runAudit()">Запустить сканирование</button>
             </div>
         </div>
+
         <div id="screen-subscription" style="display:none;" class="card">
             <h2>💎 Доступ ограничен</h2>
             <p>Ваша бесплатная проверка завершена. Выберите тариф, чтобы продолжить:</p>
@@ -77,11 +78,13 @@
 
             <button class="btn-secondary" onclick="showInputScreen()">Назад</button>
         </div>
+
         <div id="screen-loading" style="display: none; text-align: center; padding-top: 50px;">
             <div class="spinner"></div>
             <div class="loader"></div>
             <p id="loading-text">Инициализация...</p>
         </div>
+
         <div id="screen-result" style="display:none;">
             <h2>Маркетплейс должен Вам: <span id="result-sum" style="color: #31b545">0</span> ₽</h2>
             <div id="result-details" class="" style="color: black"></div>

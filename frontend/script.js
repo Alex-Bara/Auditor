@@ -22,7 +22,7 @@ function showResultScreen(data) {
     const selectedMarketplace = document.querySelector('input[name="marketplace"]:checked');
     lastAuditData.marketplace = selectedMarketplace ? selectedMarketplace.value : 'wb';
 
-    document.getElementById('total-amount').innerText = data.total_sum.toLocaleString() + " ₽";
+    document.getElementById('result-sum').innerText = data.total_sum.toLocaleString() + " ₽";
     renderResults(data);
 
     document.getElementById('screen-loading').style.display = 'none';
