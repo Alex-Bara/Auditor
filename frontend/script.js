@@ -19,10 +19,10 @@ function safeAlert(message) {
 
 function runDemo() {
     // Показываем короткую анимацию загрузки для реалистичности
-    showLoading();
+    startLoadingAnimation();
 
     setTimeout(() => {
-        hideLoading();
+        stopLoadingAnimation();
 
         // Моковые (тестовые) данные
         const demoData = {
