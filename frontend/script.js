@@ -66,7 +66,9 @@ function runDemo() {
             resultsScreen.prepend(demoNotice);
         }
 
+
         const downloadBtn = document.getElementById('download-btn');
+        downloadBtn.style.display = 'block';
         if (downloadBtn) {
             downloadBtn.onclick = () => {
                 alert("Скачивание PDF доступно только после реального аудита вашего кабинета.");
