@@ -50,7 +50,7 @@ function runDemo() {
         resultsScreen.prepend(demoNotice);
 
         // Блокируем кнопку скачивания PDF в демо-режиме
-        const downloadBtn = document.getElementById('btn-download');
+        const downloadBtn = document.getElementById('download-btn');
         downloadBtn.onclick = () => {
             alert("Скачивание PDF доступно только после реального аудита вашего кабинета.");
             showInputScreen();
