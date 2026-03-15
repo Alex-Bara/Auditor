@@ -44,9 +44,9 @@ function runDemo() {
             status: "success",
             total_sum: 84350,
             preview: [
-                { article: "Платье миди шелк", reason: "Логистика: неверные габариты", amount: 12500, id: "DEMO-1" },
-                { article: "Сумка кожаная", reason: "Дублирование штрафа", amount: 4800, id: "DEMO-2" },
-                { article: "Туфли Classic", reason: "Неучтенный возврат", amount: 3200, id: "DEMO-3" }
+                { article: "Платье миди шелк", reason: "Логистика: неверные габариты", amount: 17350, id: "a8fd7g4g64" },
+                { article: "Сумка кожаная", reason: "Дублирование штрафа", amount: 35000, id: "gj645gj879" },
+                { article: "Туфли Classic", reason: "Неучтенный возврат", amount: 32000, id: "jg546gj798" }
             ],
             is_demo: true
         };
