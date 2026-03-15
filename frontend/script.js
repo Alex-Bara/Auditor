@@ -39,7 +39,7 @@ function runDemo() {
         renderResults(demoData);
 
         // Добавим плашку, что это демо
-        const resultsScreen = document.getElementById('screen-results');
+        const resultsScreen = document.getElementById('screen-result');
         const demoNotice = document.createElement('div');
         demoNotice.id = 'demo-banner';
         demoNotice.innerHTML = `
